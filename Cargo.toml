@@ -1,0 +1,10 @@
+[package]
+name = "ratthew"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+bevy = { git = "https://github.com/bevyengine/bevy" }
+ratatui = "0.26.3"
+bevy_rat = { path = "../bevy_rat" }
+crossterm = "0.27.0"
