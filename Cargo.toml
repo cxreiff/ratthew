@@ -11,6 +11,7 @@ bevy_ratatui_render = "0.4.2"
 bevy_ratatui = "0.5.1"
 bevy_ecs_ldtk = { git = "https://github.com/Trouv/bevy_ecs_ldtk", branch = "main" }
 bevy_asset_loader = "0.20.2"
+dotenv = "0.15.0"
 
 [patch.crates-io]
 # Patch unstable version to resolve conflicting dependencies from bevy_ecs_ldtk

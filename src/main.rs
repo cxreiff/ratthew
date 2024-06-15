@@ -14,6 +14,7 @@ use bevy_ratatui::RatatuiPlugins;
 use bevy_ratatui_render::{RatatuiRenderContext, RatatuiRenderPlugin};
 use camera::{KeysDown, ViewCameraPlugin};
 use crossterm::event::{KeyCode, KeyEventKind, KeyEventState, KeyModifiers};
+use dotenv::dotenv;
 use loading::LoadingPlugin;
 use ratatui::layout::Alignment;
 use ratatui::style::Style;
@@ -32,6 +33,8 @@ pub struct Flags {
 }
 
 fn main() {
+    dotenv().ok();
+
     App::new()
         .add_plugins((
             DefaultPlugins.set(ImagePlugin::default_nearest()),
