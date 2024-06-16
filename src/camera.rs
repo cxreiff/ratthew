@@ -24,7 +24,8 @@ fn setup_camera_system(mut commands: Commands, ratatui_render: Res<RatatuiRender
     commands
         .spawn((
             Camera3dBundle {
-                transform: Transform::from_xyz(10., -10., 0.).looking_at(Vec3::Y, Vec3::Z),
+                transform: Transform::from_xyz(-5., 0., -5.)
+                    .looking_at(Vec3::new(0., 0., -5.), Vec3::Y),
                 tonemapping: Tonemapping::None,
                 camera: Camera {
                     target: ratatui_render.target("main").unwrap_or_default(),
@@ -69,8 +70,8 @@ pub fn move_camera_system(
                 camera_transform.rotate_local_y(-time.delta_seconds() * 1.5);
             }
             KeyCode::Char(' ') => {
-                let up = camera_transform.up().normalize();
-                camera_transform.translation += up;
+                *camera_transform = Transform::from_xyz(0., 10., 0.);
+                camera_transform.look_at(-Vec3::Y, Vec3::Z)
             }
             _ => {}
         }

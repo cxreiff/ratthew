@@ -5,6 +5,8 @@ use bevy_asset_loader::{
 };
 use bevy_ecs_ldtk::assets::{LdtkAssetPlugin, LdtkProject};
 
+use crate::cube::UprightCube;
+
 pub struct LoadingPlugin;
 
 impl Plugin for LoadingPlugin {
@@ -46,7 +48,7 @@ fn level_setup_system(
     let tileset = images.get(&handles.tileset).unwrap();
     let mut tileset = tileset.clone().try_into_dynamic().unwrap();
 
-    let square = meshes.add(Cuboid::from_size(Vec3::new(1., 1., 1.)));
+    let cube = meshes.add(UprightCube);
     let red_material = materials.add(StandardMaterial {
         base_color: Color::RED,
         ..Default::default()
@@ -73,11 +75,11 @@ fn level_setup_system(
 
                     commands.spawn(PbrBundle {
                         transform: Transform::from_xyz(
-                            0.065 * tile.px.x as f32,
-                            -0.065 * tile.px.y as f32,
+                            -0.065 * tile.px.x as f32,
                             0.,
+                            -0.065 * tile.px.y as f32,
                         ),
-                        mesh: square.clone(),
+                        mesh: cube.clone(),
                         material: material_map
                             .get(&(tile.src.x, tile.src.y))
                             .unwrap_or(&red_material)

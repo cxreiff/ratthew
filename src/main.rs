@@ -22,6 +22,7 @@ use ratatui::style::Stylize;
 use ratatui::widgets::Block;
 
 mod camera;
+mod cube;
 mod loading;
 
 #[derive(Component)]
@@ -65,8 +66,8 @@ fn setup_scene(
             reflectance: 0.0,
             ..Default::default()
         }),
-        transform: Transform::from_xyz(10., -10., -0.6),
-        mesh: meshes.add(Cuboid::new(20., 20., 0.2)),
+        transform: Transform::from_xyz(-10., -0.6, -10.0),
+        mesh: meshes.add(Cuboid::new(20., 0.2, 20.)),
         ..Default::default()
     });
     commands.spawn(PointLightBundle {
@@ -74,7 +75,7 @@ fn setup_scene(
             shadows_enabled: true,
             ..default()
         },
-        transform: Transform::from_xyz(3.0, 4.0, 6.0),
+        transform: Transform::from_xyz(3.0, 6.0, 4.0),
         ..default()
     });
 }
