@@ -1,11 +1,11 @@
-use bevy::{prelude::*, render::render_asset::RenderAssetUsages, utils::HashMap};
+use bevy::prelude::*;
 use bevy_asset_loader::{
     asset_collection::AssetCollection,
     loading_state::{config::ConfigureLoadingState, LoadingState, LoadingStateAppExt},
 };
 use bevy_ecs_ldtk::assets::{LdtkAssetPlugin, LdtkProject};
 
-use crate::cube::UprightCube;
+use crate::spawning::{spawn_layer_floor, spawn_layer_walls};
 
 pub struct LoadingPlugin;
 
@@ -48,44 +48,35 @@ fn level_setup_system(
     let tileset = images.get(&handles.tileset).unwrap();
     let mut tileset = tileset.clone().try_into_dynamic().unwrap();
 
-    let cube = meshes.add(UprightCube);
-    let red_material = materials.add(StandardMaterial {
-        base_color: Color::RED,
-        ..Default::default()
-    });
-
-    let mut material_map = HashMap::new();
-
     if let Some(ldtk) = ldtk_assets.get(&handles.level) {
         if let Some(level) = ldtk.as_standalone().iter_loaded_levels().next() {
             for layer in level.layer_instances().iter() {
-                for tile in layer.auto_layer_tiles.iter() {
-                    if material_map.get(&(tile.src.x, tile.src.y)).is_none() {
-                        let material_handle = materials.add(StandardMaterial {
-                            reflectance: 0.1,
-                            base_color_texture: Some(images.add(Image::from_dynamic(
-                                tileset.crop(tile.src.x as u32, tile.src.y as u32, 16, 16),
-                                true,
-                                RenderAssetUsages::RENDER_WORLD,
-                            ))),
-                            ..Default::default()
-                        });
-                        material_map.insert((tile.src.x, tile.src.y), material_handle.clone());
-                    }
-
-                    commands.spawn(PbrBundle {
-                        transform: Transform::from_xyz(
-                            -0.065 * tile.px.x as f32,
-                            0.,
-                            -0.065 * tile.px.y as f32,
-                        ),
-                        mesh: cube.clone(),
-                        material: material_map
-                            .get(&(tile.src.x, tile.src.y))
-                            .unwrap_or(&red_material)
-                            .clone(),
-                        ..Default::default()
-                    });
+                match layer.layer_instance_type {
+                    bevy_ecs_ldtk::ldtk::Type::AutoLayer => spawn_layer_walls(
+                        &mut commands,
+                        &mut meshes,
+                        &mut materials,
+                        &mut images,
+                        &mut tileset,
+                        layer,
+                    ),
+                    bevy_ecs_ldtk::ldtk::Type::Entities => {}
+                    bevy_ecs_ldtk::ldtk::Type::IntGrid => spawn_layer_walls(
+                        &mut commands,
+                        &mut meshes,
+                        &mut materials,
+                        &mut images,
+                        &mut tileset,
+                        layer,
+                    ),
+                    bevy_ecs_ldtk::ldtk::Type::Tiles => spawn_layer_floor(
+                        &mut commands,
+                        &mut meshes,
+                        &mut materials,
+                        &mut images,
+                        &mut tileset,
+                        layer,
+                    ),
                 }
             }
         }

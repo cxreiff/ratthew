@@ -3356,6 +3356,7 @@ dependencies = [
  "bevy_ratatui_render",
  "crossterm",
  "dotenv",
+ "image",
  "ratatui",
 ]
 

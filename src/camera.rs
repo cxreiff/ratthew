@@ -57,17 +57,17 @@ pub fn move_camera_system(
         match key {
             KeyCode::Up => {
                 let forward = camera_transform.forward().normalize();
-                camera_transform.translation += forward / 7.;
+                camera_transform.translation += forward / 12.;
             }
             KeyCode::Down => {
                 let back = camera_transform.back().normalize();
-                camera_transform.translation += back / 7.;
+                camera_transform.translation += back / 12.;
             }
             KeyCode::Left => {
-                camera_transform.rotate_local_y(time.delta_seconds() * 1.5);
+                camera_transform.rotate_local_y(time.delta_seconds() * 1.8);
             }
             KeyCode::Right => {
-                camera_transform.rotate_local_y(-time.delta_seconds() * 1.5);
+                camera_transform.rotate_local_y(-time.delta_seconds() * 1.8);
             }
             KeyCode::Char(' ') => {
                 *camera_transform = Transform::from_xyz(0., 10., 0.);

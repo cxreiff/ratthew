@@ -24,6 +24,7 @@ use ratatui::widgets::Block;
 mod camera;
 mod cube;
 mod loading;
+mod spawning;
 
 #[derive(Component)]
 pub struct Cube;
@@ -48,36 +49,10 @@ fn main() {
         ))
         .insert_resource(Flags::default())
         .insert_resource(ClearColor(Color::rgb(0., 0., 0.)))
-        .add_systems(Startup, setup_scene)
         .add_systems(Update, draw_scene.map(error))
         .add_systems(Update, handle_keys.map(error))
         .add_systems(Update, passthrough_keyboard_events)
         .run();
-}
-
-fn setup_scene(
-    mut commands: Commands,
-    mut meshes: ResMut<Assets<Mesh>>,
-    mut materials: ResMut<Assets<StandardMaterial>>,
-) {
-    commands.spawn(PbrBundle {
-        material: materials.add(StandardMaterial {
-            base_color: Color::GRAY,
-            reflectance: 0.0,
-            ..Default::default()
-        }),
-        transform: Transform::from_xyz(-10., -0.6, -10.0),
-        mesh: meshes.add(Cuboid::new(20., 0.2, 20.)),
-        ..Default::default()
-    });
-    commands.spawn(PointLightBundle {
-        point_light: PointLight {
-            shadows_enabled: true,
-            ..default()
-        },
-        transform: Transform::from_xyz(3.0, 6.0, 4.0),
-        ..default()
-    });
 }
 
 fn draw_scene(
