@@ -15,7 +15,7 @@ impl Plugin for ViewCameraPlugin {
 }
 
 #[derive(Component)]
-pub struct ViewCamera;
+pub struct Player;
 
 #[derive(Resource, Default, Deref, DerefMut)]
 pub struct KeysDown(pub Vec<KeyCode>);
@@ -33,7 +33,7 @@ fn setup_camera_system(mut commands: Commands, ratatui_render: Res<RatatuiRender
                 },
                 ..default()
             },
-            ViewCamera,
+            Player,
         ))
         .with_children(|parent| {
             parent.spawn(PointLightBundle {
@@ -48,7 +48,7 @@ fn setup_camera_system(mut commands: Commands, ratatui_render: Res<RatatuiRender
 }
 
 pub fn move_camera_system(
-    mut q_camera: Query<&mut Transform, With<ViewCamera>>,
+    mut q_camera: Query<&mut Transform, With<Player>>,
     keys_down: Res<KeysDown>,
     time: Res<Time>,
 ) -> io::Result<()> {
@@ -57,11 +57,11 @@ pub fn move_camera_system(
         match key {
             KeyCode::Up => {
                 let forward = camera_transform.forward().normalize();
-                camera_transform.translation += forward / 12.;
+                camera_transform.translation += forward / 16.;
             }
             KeyCode::Down => {
                 let back = camera_transform.back().normalize();
-                camera_transform.translation += back / 12.;
+                camera_transform.translation += back / 16.;
             }
             KeyCode::Left => {
                 camera_transform.rotate_local_y(time.delta_seconds() * 1.8);

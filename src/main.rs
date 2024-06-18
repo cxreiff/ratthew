@@ -12,7 +12,8 @@ use bevy_ratatui::kitty::KittyEnabled;
 use bevy_ratatui::terminal::RatatuiContext;
 use bevy_ratatui::RatatuiPlugins;
 use bevy_ratatui_render::{RatatuiRenderContext, RatatuiRenderPlugin};
-use camera::{KeysDown, ViewCameraPlugin};
+use camera::{move_camera_system, KeysDown, ViewCameraPlugin};
+use collisions::collisions_system;
 use crossterm::event::{KeyCode, KeyEventKind, KeyEventState, KeyModifiers};
 use dotenv::dotenv;
 use loading::LoadingPlugin;
@@ -22,6 +23,7 @@ use ratatui::style::Stylize;
 use ratatui::widgets::Block;
 
 mod camera;
+mod collisions;
 mod cube;
 mod loading;
 mod spawning;
@@ -51,6 +53,7 @@ fn main() {
         .insert_resource(ClearColor(Color::rgb(0., 0., 0.)))
         .add_systems(Update, draw_scene.map(error))
         .add_systems(Update, handle_keys.map(error))
+        .add_systems(Update, collisions_system.after(move_camera_system))
         .add_systems(Update, passthrough_keyboard_events)
         .run();
 }

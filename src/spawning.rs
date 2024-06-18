@@ -4,6 +4,9 @@ use image::DynamicImage;
 
 use crate::cube::UprightCube;
 
+#[derive(Component)]
+pub struct Collider;
+
 pub fn spawn_layer_walls(
     commands: &mut Commands,
     meshes: &mut ResMut<Assets<Mesh>>,
@@ -21,19 +24,22 @@ pub fn spawn_layer_walls(
     let material_map = generate_material_map(materials, images, tileset, &layer.auto_layer_tiles);
 
     for tile in layer.auto_layer_tiles.iter() {
-        commands.spawn(PbrBundle {
-            transform: Transform::from_xyz(
-                -0.063 * tile.px.x as f32,
-                0.,
-                -0.063 * tile.px.y as f32,
-            ),
-            mesh: cube.clone(),
-            material: material_map
-                .get(&(tile.src.x, tile.src.y))
-                .unwrap_or(&missing_material)
-                .clone(),
-            ..Default::default()
-        });
+        commands.spawn((
+            PbrBundle {
+                transform: Transform::from_xyz(
+                    -0.063 * tile.px.x as f32,
+                    0.,
+                    -0.063 * tile.px.y as f32,
+                ),
+                mesh: cube.clone(),
+                material: material_map
+                    .get(&(tile.src.x, tile.src.y))
+                    .unwrap_or(&missing_material)
+                    .clone(),
+                ..Default::default()
+            },
+            Collider,
+        ));
     }
 }
 
