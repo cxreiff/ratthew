@@ -1,4 +1,4 @@
-use bevy::prelude::*;
+use bevy::{gltf::Gltf, prelude::*};
 use bevy_asset_loader::{
     asset_collection::AssetCollection,
     loading_state::{config::ConfigureLoadingState, LoadingState, LoadingStateAppExt},
@@ -28,6 +28,8 @@ pub struct GameAssets {
     level: Handle<LdtkProject>,
     #[asset(path = "1bit.png")]
     tileset: Handle<Image>,
+    #[asset(path = "sword.glb")]
+    pub sword: Handle<Gltf>,
 }
 
 #[derive(Default, States, Clone, Debug, Hash, Eq, PartialEq)]

@@ -16,7 +16,7 @@ use camera::{move_camera_system, KeysDown, ViewCameraPlugin};
 use collisions::collisions_system;
 use crossterm::event::{KeyCode, KeyEventKind, KeyEventState, KeyModifiers};
 use dotenv::dotenv;
-use loading::LoadingPlugin;
+use loading::{GameStates, LoadingPlugin};
 use ratatui::layout::Alignment;
 use ratatui::style::Style;
 use ratatui::style::Stylize;
@@ -53,7 +53,12 @@ fn main() {
         .insert_resource(ClearColor(Color::rgb(0., 0., 0.)))
         .add_systems(Update, draw_scene.map(error))
         .add_systems(Update, handle_keys.map(error))
-        .add_systems(Update, collisions_system.after(move_camera_system))
+        .add_systems(
+            Update,
+            collisions_system
+                .run_if(in_state(GameStates::Playing))
+                .after(move_camera_system),
+        )
         .add_systems(Update, passthrough_keyboard_events)
         .run();
 }
