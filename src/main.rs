@@ -1,6 +1,7 @@
 use std::io;
 use std::time::Duration;
 
+use animation::sword_bob_system;
 use bevy::app::AppExit;
 use bevy::diagnostic::{DiagnosticsStore, FrameTimeDiagnosticsPlugin};
 use bevy::input::keyboard::KeyboardInput;
@@ -22,6 +23,7 @@ use ratatui::style::Style;
 use ratatui::style::Stylize;
 use ratatui::widgets::Block;
 
+mod animation;
 mod camera;
 mod collisions;
 mod cube;
@@ -34,6 +36,7 @@ pub struct Cube;
 #[derive(Resource, Default)]
 pub struct Flags {
     debug: bool,
+    supports_key_release: bool,
 }
 
 fn main() {
@@ -53,11 +56,14 @@ fn main() {
         .insert_resource(ClearColor(Color::rgb(0., 0., 0.)))
         .add_systems(Update, draw_scene.map(error))
         .add_systems(Update, handle_keys.map(error))
+        .add_systems(Update, expire_keys_system)
         .add_systems(
             Update,
-            collisions_system
-                .run_if(in_state(GameStates::Playing))
-                .after(move_camera_system),
+            (
+                collisions_system.after(move_camera_system),
+                sword_bob_system,
+            )
+                .run_if(in_state(GameStates::Playing)),
         )
         .add_systems(Update, passthrough_keyboard_events)
         .run();
@@ -116,7 +122,7 @@ pub fn handle_keys(
 ) -> io::Result<()> {
     for KeyEvent(key_event) in ratatui_events.read() {
         match key_event.kind {
-            KeyEventKind::Press => match key_event.code {
+            KeyEventKind::Press | KeyEventKind::Repeat => match key_event.code {
                 KeyCode::Char('q') => {
                     exit.send(AppExit);
                 }
@@ -130,9 +136,7 @@ pub fn handle_keys(
                 | KeyCode::Left
                 | KeyCode::Right
                 | KeyCode::Char(' ') => {
-                    if !keys_down.contains(&key_event.code) {
-                        keys_down.push(key_event.code);
-                    }
+                    keys_down.entry(key_event.code).insert(0.5);
                 }
 
                 _ => {}
@@ -143,15 +147,29 @@ pub fn handle_keys(
                 | KeyCode::Left
                 | KeyCode::Right
                 | KeyCode::Char(' ') => {
-                    keys_down.retain(|key| *key != key_event.code);
+                    keys_down.remove(&key_event.code);
                 }
                 _ => {}
             },
-            _ => {}
+        }
+
+        if key_event.kind == KeyEventKind::Release {
+            flags.supports_key_release = true;
         }
     }
 
     Ok(())
+}
+
+fn expire_keys_system(flags: Res<Flags>, mut keys_down: ResMut<KeysDown>, time: Res<Time>) {
+    if flags.supports_key_release {
+        return;
+    }
+
+    keys_down.iter_mut().for_each(|(_, remaining)| {
+        *remaining -= time.delta_seconds();
+    });
+    keys_down.retain(|_, remaining| *remaining > 0.);
 }
 
 fn passthrough_keyboard_events(

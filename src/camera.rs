@@ -1,6 +1,11 @@
 use std::io;
 
-use bevy::{core_pipeline::tonemapping::Tonemapping, gltf::Gltf, prelude::*, utils::error};
+use bevy::{
+    core_pipeline::tonemapping::Tonemapping,
+    gltf::Gltf,
+    prelude::*,
+    utils::{error, HashMap},
+};
 use bevy_ratatui_render::RatatuiRenderContext;
 use crossterm::event::KeyCode;
 
@@ -24,8 +29,11 @@ impl Plugin for ViewCameraPlugin {
 #[derive(Component)]
 pub struct Player;
 
-#[derive(Resource, Default, Deref, DerefMut)]
-pub struct KeysDown(pub Vec<KeyCode>);
+#[derive(Component)]
+pub struct Sword;
+
+#[derive(Resource, Default, Deref, DerefMut, Debug)]
+pub struct KeysDown(pub HashMap<KeyCode, f32>);
 
 fn setup_camera_system(
     mut commands: Commands,
@@ -54,11 +62,14 @@ fn setup_camera_system(
                 sword_transform.rotate_local_x(-1.4);
                 sword_transform.rotate_local_y(0.3);
                 sword_transform.rotate_local_z(-0.15);
-                parent.spawn(SceneBundle {
-                    transform: sword_transform,
-                    scene: gltf.scenes[0].clone(),
-                    ..Default::default()
-                });
+                parent.spawn((
+                    SceneBundle {
+                        transform: sword_transform,
+                        scene: gltf.scenes[0].clone(),
+                        ..Default::default()
+                    },
+                    Sword,
+                ));
             }
             parent.spawn(PointLightBundle {
                 point_light: PointLight {
@@ -77,7 +88,7 @@ pub fn move_camera_system(
     time: Res<Time>,
 ) -> io::Result<()> {
     let mut camera_transform = q_camera.single_mut();
-    for key in keys_down.iter() {
+    for (key, _) in keys_down.iter() {
         match key {
             KeyCode::Up => {
                 let forward = camera_transform.forward().normalize();
