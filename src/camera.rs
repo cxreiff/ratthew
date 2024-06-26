@@ -4,9 +4,11 @@ use bevy::{
     core_pipeline::tonemapping::Tonemapping,
     gltf::Gltf,
     prelude::*,
+    render::view::RenderLayers,
     utils::{error, HashMap},
 };
 use bevy_ratatui_render::RatatuiRenderContext;
+use bevy_scene_hook::{HookedSceneBundle, SceneHook};
 use crossterm::event::KeyCode;
 
 use crate::loading::{GameAssets, GameStates};
@@ -48,6 +50,7 @@ fn setup_camera_system(
                     .looking_at(Vec3::new(0., 0., -5.), Vec3::Y),
                 tonemapping: Tonemapping::None,
                 camera: Camera {
+                    order: 1,
                     target: ratatui_render.target("main").unwrap_or_default(),
                     ..default()
                 },
@@ -56,29 +59,59 @@ fn setup_camera_system(
             Player,
         ))
         .with_children(|parent| {
-            if let Some(gltf) = assets_gltf.get(&handles.sword) {
-                let mut sword_transform =
-                    Transform::from_xyz(0.3, -0.15, -0.7).with_scale(Vec3::new(0.4, 0.4, 0.4));
-                sword_transform.rotate_local_x(-1.4);
-                sword_transform.rotate_local_y(0.3);
-                sword_transform.rotate_local_z(-0.15);
-                parent.spawn((
-                    SceneBundle {
-                        transform: sword_transform,
-                        scene: gltf.scenes[0].clone(),
-                        ..Default::default()
-                    },
-                    Sword,
-                ));
-            }
-            parent.spawn(PointLightBundle {
+            parent.spawn((PointLightBundle {
                 point_light: PointLight {
                     intensity: 100000.,
                     shadows_enabled: true,
                     ..default()
                 },
                 ..default()
-            });
+            },));
+            parent.spawn((
+                Camera3dBundle {
+                    tonemapping: Tonemapping::None,
+                    camera: Camera {
+                        target: ratatui_render.target("main").unwrap_or_default(),
+                        ..default()
+                    },
+                    ..default()
+                },
+                RenderLayers::layer(1),
+            ));
+
+            if let Some(gltf) = assets_gltf.get(&handles.sword) {
+                let mut sword_transform =
+                    Transform::from_xyz(0.3, -0.15, -0.7).with_scale(Vec3::new(0.4, 0.4, 0.4));
+                sword_transform.rotate_local_x(-1.4);
+                sword_transform.rotate_local_y(0.3);
+                sword_transform.rotate_local_z(-0.15);
+
+                parent.spawn((
+                    HookedSceneBundle {
+                        scene: SceneBundle {
+                            transform: sword_transform,
+                            scene: gltf.scenes[0].clone(),
+                            ..Default::default()
+                        },
+                        hook: SceneHook::new(|_, cmds| {
+                            cmds.insert(RenderLayers::layer(1));
+                        }),
+                    },
+                    Sword,
+                    RenderLayers::layer(1),
+                ));
+            }
+            parent.spawn((
+                PointLightBundle {
+                    point_light: PointLight {
+                        intensity: 100000.,
+                        shadows_enabled: true,
+                        ..default()
+                    },
+                    ..default()
+                },
+                RenderLayers::layer(1),
+            ));
         });
 }
 

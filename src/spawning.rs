@@ -1,4 +1,8 @@
-use bevy::{prelude::*, render::render_asset::RenderAssetUsages, utils::HashMap};
+use bevy::{
+    prelude::*,
+    render::{render_asset::RenderAssetUsages, view::RenderLayers},
+    utils::HashMap,
+};
 use bevy_ecs_ldtk::ldtk::{LayerInstance, TileInstance};
 use image::DynamicImage;
 
@@ -38,6 +42,7 @@ pub fn spawn_layer_walls(
                     .clone(),
                 ..Default::default()
             },
+            RenderLayers::layer(1),
             Collider,
         ));
     }
@@ -60,19 +65,22 @@ pub fn spawn_layer_floor(
     let material_map = generate_material_map(materials, images, tileset, &layer.grid_tiles);
 
     for tile in layer.grid_tiles.iter() {
-        commands.spawn(PbrBundle {
-            transform: Transform::from_xyz(
-                -0.063 * tile.px.x as f32,
-                -0.5,
-                -0.063 * tile.px.y as f32,
-            ),
-            mesh: floor.clone(),
-            material: material_map
-                .get(&(tile.src.x, tile.src.y))
-                .unwrap_or(&missing_material)
-                .clone(),
-            ..Default::default()
-        });
+        commands.spawn((
+            PbrBundle {
+                transform: Transform::from_xyz(
+                    -0.063 * tile.px.x as f32,
+                    -0.5,
+                    -0.063 * tile.px.y as f32,
+                ),
+                mesh: floor.clone(),
+                material: material_map
+                    .get(&(tile.src.x, tile.src.y))
+                    .unwrap_or(&missing_material)
+                    .clone(),
+                ..Default::default()
+            },
+            RenderLayers::layer(1),
+        ));
     }
 }
 
