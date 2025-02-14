@@ -18,24 +18,24 @@ pub fn collisions_system(
 ) {
     let mut player_transform = query_player.single_mut();
 
-    let player_bounds = BoundingCircle::new(player_transform.translation.xz(), 0.4);
+    let player_bounds = BoundingCircle::new(player_transform.translation.xy(), 0.4);
 
     for collider_transform in &query_colliders {
-        let collider_bounds = Aabb2d::new(collider_transform.translation.xz(), Vec2::new(0.5, 0.5));
+        let collider_bounds = Aabb2d::new(collider_transform.translation.xy(), Vec2::new(0.5, 0.5));
 
         if let Some(collision) = collision_check(&player_bounds, &collider_bounds) {
             match collision {
                 Collision::North => {
-                    player_transform.translation.z = player_transform
+                    player_transform.translation.y = player_transform
                         .translation
-                        .z
+                        .y
                         .max(collider_bounds.max.y + 0.4)
                 }
                 Collision::East => player_transform.translation.x = collider_bounds.max.x + 0.4,
                 Collision::South => {
-                    player_transform.translation.z = player_transform
+                    player_transform.translation.y = player_transform
                         .translation
-                        .z
+                        .y
                         .min(collider_bounds.min.y - 0.4)
                 }
                 Collision::West => player_transform.translation.x = collider_bounds.min.x - 0.4,

@@ -4,20 +4,16 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-bevy = { version = "0.13.2", features = [ "dynamic_linking", "file_watcher" ]}
-ratatui = "0.26.3"
-crossterm = "0.27.0"
-bevy_ratatui_render = "0.4.2"
-bevy_ratatui = "0.5.1"
-bevy_ecs_ldtk = { git = "https://github.com/Trouv/bevy_ecs_ldtk", branch = "main" }
-bevy_asset_loader = "0.20.2"
+bevy = { version = "0.15.2", features = [ "dynamic_linking", "file_watcher" ]}
+ratatui = "0.29.0"
+bevy_ratatui_camera = "0.8.2"
+bevy_ratatui = "0.7.0"
+bevy_ecs_ldtk = "0.11.0"
+bevy_asset_loader = "0.22.0"
+crossterm = "0.28.0"
 dotenv = "0.15.0"
-image = "0.24"
-bevy-scene-hook = "10.0.0"
-
-[patch.crates-io]
-# Patch unstable version to resolve conflicting dependencies from bevy_ecs_ldtk
-bevy_ecs_tilemap = { git = "https://github.com/StarArawn/bevy_ecs_tilemap" }
+image = "0.25.5"
+# image = "0.24"
 
 [profile.dev]
 opt-level = 1

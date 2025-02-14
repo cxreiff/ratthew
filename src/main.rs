@@ -12,7 +12,7 @@ use bevy_ratatui::event::KeyEvent;
 use bevy_ratatui::kitty::KittyEnabled;
 use bevy_ratatui::terminal::RatatuiContext;
 use bevy_ratatui::RatatuiPlugins;
-use bevy_ratatui_render::{RatatuiRenderContext, RatatuiRenderPlugin};
+use bevy_ratatui_camera::{RatatuiCameraPlugin, RatatuiCameraWidget};
 use camera::{move_camera_system, KeysDown, ViewCameraPlugin};
 use collisions::collisions_system;
 use crossterm::event::{KeyCode, KeyEventKind, KeyEventState, KeyModifiers};
@@ -48,14 +48,14 @@ fn main() {
             ScheduleRunnerPlugin::run_loop(Duration::from_secs_f64(1.0 / 60.0)),
             FrameTimeDiagnosticsPlugin,
             RatatuiPlugins::default(),
-            RatatuiRenderPlugin::new("main", (640, 400)),
+            RatatuiCameraPlugin,
             ViewCameraPlugin,
             LoadingPlugin,
         ))
         .insert_resource(Flags::default())
-        .insert_resource(ClearColor(Color::rgb(0., 0., 0.)))
+        .insert_resource(ClearColor(Color::srgb(0., 0., 0.)))
         .add_systems(Update, draw_scene.map(error))
-        .add_systems(Update, handle_keys.map(error))
+        .add_systems(Update, handle_keyboard_system)
         .add_systems(Update, expire_keys_system)
         .add_systems(
             Update,
@@ -71,7 +71,7 @@ fn main() {
 
 fn draw_scene(
     mut ratatui: ResMut<RatatuiContext>,
-    ratatui_render: Res<RatatuiRenderContext>,
+    ratatui_widgets: Query<&mut RatatuiCameraWidget>,
     flags: Res<Flags>,
     diagnostics: Res<DiagnosticsStore>,
     kitty_enabled: Option<Res<KittyEnabled>>,
@@ -80,7 +80,7 @@ fn draw_scene(
         let mut block = Block::bordered()
             .bg(ratatui::style::Color::Rgb(0, 0, 0))
             .border_style(Style::default().bg(ratatui::style::Color::Rgb(0, 0, 0)));
-        let inner = block.inner(frame.size());
+        let inner = block.inner(frame.area());
 
         if flags.debug {
             block = block
@@ -104,9 +104,9 @@ fn draw_scene(
             }
         }
 
-        frame.render_widget(block, frame.size());
+        frame.render_widget(block, frame.area());
 
-        if let Some(widget) = ratatui_render.widget("main") {
+        if let Some(widget) = ratatui_widgets.iter().nth(1) {
             frame.render_widget(widget, inner);
         }
     })?;
@@ -114,17 +114,17 @@ fn draw_scene(
     Ok(())
 }
 
-pub fn handle_keys(
+fn handle_keyboard_system(
     mut ratatui_events: EventReader<KeyEvent>,
     mut exit: EventWriter<AppExit>,
     mut flags: ResMut<Flags>,
     mut keys_down: ResMut<KeysDown>,
-) -> io::Result<()> {
-    for KeyEvent(key_event) in ratatui_events.read() {
+) {
+    for key_event in ratatui_events.read() {
         match key_event.kind {
             KeyEventKind::Press | KeyEventKind::Repeat => match key_event.code {
                 KeyCode::Char('q') => {
-                    exit.send(AppExit);
+                    exit.send_default();
                 }
 
                 KeyCode::Char('d') => {
@@ -152,13 +152,7 @@ pub fn handle_keys(
                 _ => {}
             },
         }
-
-        if key_event.kind == KeyEventKind::Release {
-            flags.supports_key_release = true;
-        }
     }
-
-    Ok(())
 }
 
 fn expire_keys_system(flags: Res<Flags>, mut keys_down: ResMut<KeysDown>, time: Res<Time>) {
@@ -167,7 +161,7 @@ fn expire_keys_system(flags: Res<Flags>, mut keys_down: ResMut<KeysDown>, time: 
     }
 
     keys_down.iter_mut().for_each(|(_, remaining)| {
-        *remaining -= time.delta_seconds();
+        *remaining -= time.delta_secs();
     });
     keys_down.retain(|_, remaining| *remaining > 0.);
 }

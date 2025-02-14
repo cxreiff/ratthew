@@ -1,14 +1,12 @@
 use std::io;
 
 use bevy::{
-    core_pipeline::tonemapping::Tonemapping,
     gltf::Gltf,
     prelude::*,
     render::view::RenderLayers,
     utils::{error, HashMap},
 };
-use bevy_ratatui_render::RatatuiRenderContext;
-use bevy_scene_hook::{HookedSceneBundle, SceneHook};
+use bevy_ratatui_camera::{RatatuiCamera, RatatuiCameraStrategy};
 use crossterm::event::KeyCode;
 
 use crate::loading::{GameAssets, GameStates};
@@ -39,44 +37,32 @@ pub struct KeysDown(pub HashMap<KeyCode, f32>);
 
 fn setup_camera_system(
     mut commands: Commands,
-    ratatui_render: Res<RatatuiRenderContext>,
     handles: Res<GameAssets>,
     assets_gltf: Res<Assets<Gltf>>,
 ) {
     commands
         .spawn((
-            Camera3dBundle {
-                transform: Transform::from_xyz(-5., 0., -5.)
-                    .looking_at(Vec3::new(0., 0., -5.), Vec3::Y),
-                tonemapping: Tonemapping::None,
-                camera: Camera {
-                    order: 1,
-                    target: ratatui_render.target("main").unwrap_or_default(),
-                    ..default()
-                },
+            Camera {
+                order: 1,
                 ..default()
             },
+            Camera3d::default(),
+            Transform::from_translation(Vec3::new(3., -8., 0.)).looking_at(Vec3::ZERO, Vec3::Z),
+            RatatuiCamera::autoresize(),
+            RatatuiCameraStrategy::luminance_braille(),
             Player,
         ))
         .with_children(|parent| {
-            parent.spawn((PointLightBundle {
-                point_light: PointLight {
-                    intensity: 100000.,
-                    shadows_enabled: true,
-                    ..default()
-                },
+            parent.spawn(PointLight {
+                intensity: 100000.,
+                shadows_enabled: true,
                 ..default()
-            },));
+            });
             parent.spawn((
-                Camera3dBundle {
-                    tonemapping: Tonemapping::None,
-                    camera: Camera {
-                        target: ratatui_render.target("main").unwrap_or_default(),
-                        ..default()
-                    },
-                    ..default()
-                },
+                Camera3d::default(),
                 RenderLayers::layer(1),
+                RatatuiCamera::autoresize(),
+                RatatuiCameraStrategy::luminance_misc(),
             ));
 
             if let Some(gltf) = assets_gltf.get(&handles.sword) {
@@ -87,27 +73,16 @@ fn setup_camera_system(
                 sword_transform.rotate_local_z(-0.15);
 
                 parent.spawn((
-                    HookedSceneBundle {
-                        scene: SceneBundle {
-                            transform: sword_transform,
-                            scene: gltf.scenes[0].clone(),
-                            ..Default::default()
-                        },
-                        hook: SceneHook::new(|_, cmds| {
-                            cmds.insert(RenderLayers::layer(1));
-                        }),
-                    },
+                    SceneRoot(gltf.scenes[0].clone()),
+                    sword_transform,
                     Sword,
                     RenderLayers::layer(1),
                 ));
             }
             parent.spawn((
-                PointLightBundle {
-                    point_light: PointLight {
-                        intensity: 100000.,
-                        shadows_enabled: true,
-                        ..default()
-                    },
+                PointLight {
+                    intensity: 100000.,
+                    shadows_enabled: true,
                     ..default()
                 },
                 RenderLayers::layer(1),
@@ -132,10 +107,10 @@ pub fn move_camera_system(
                 camera_transform.translation += back / 16.;
             }
             KeyCode::Left => {
-                camera_transform.rotate_local_y(time.delta_seconds() * 1.8);
+                camera_transform.rotate_local_y(time.delta_secs() * 1.8);
             }
             KeyCode::Right => {
-                camera_transform.rotate_local_y(-time.delta_seconds() * 1.8);
+                camera_transform.rotate_local_y(-time.delta_secs() * 1.8);
             }
             KeyCode::Char(' ') => {
                 *camera_transform = Transform::from_xyz(0., 10., 0.);

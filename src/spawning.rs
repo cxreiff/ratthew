@@ -21,7 +21,7 @@ pub fn spawn_layer_walls(
 ) {
     let cube = meshes.add(UprightCube);
     let missing_material = materials.add(StandardMaterial {
-        base_color: Color::RED,
+        base_color: Color::srgb(1., 0., 0.),
         ..Default::default()
     });
 
@@ -29,19 +29,14 @@ pub fn spawn_layer_walls(
 
     for tile in layer.auto_layer_tiles.iter() {
         commands.spawn((
-            PbrBundle {
-                transform: Transform::from_xyz(
-                    -0.063 * tile.px.x as f32,
-                    0.,
-                    -0.063 * tile.px.y as f32,
-                ),
-                mesh: cube.clone(),
-                material: material_map
+            Transform::from_xyz(0.063 * tile.px.x as f32, -0.063 * tile.px.y as f32, 0.0),
+            Mesh3d(cube.clone()),
+            MeshMaterial3d(
+                material_map
                     .get(&(tile.src.x, tile.src.y))
                     .unwrap_or(&missing_material)
                     .clone(),
-                ..Default::default()
-            },
+            ),
             RenderLayers::layer(1),
             Collider,
         ));
@@ -56,9 +51,9 @@ pub fn spawn_layer_floor(
     tileset: &mut DynamicImage,
     layer: &LayerInstance,
 ) {
-    let floor = meshes.add(Cuboid::new(1., 0.1, 1.));
+    let floor = meshes.add(Cuboid::new(1., 1., 0.1));
     let missing_material = materials.add(StandardMaterial {
-        base_color: Color::RED,
+        base_color: Color::srgb(1., 0., 0.),
         ..Default::default()
     });
 
@@ -66,19 +61,14 @@ pub fn spawn_layer_floor(
 
     for tile in layer.grid_tiles.iter() {
         commands.spawn((
-            PbrBundle {
-                transform: Transform::from_xyz(
-                    -0.063 * tile.px.x as f32,
-                    -0.5,
-                    -0.063 * tile.px.y as f32,
-                ),
-                mesh: floor.clone(),
-                material: material_map
+            Transform::from_xyz(0.063 * tile.px.x as f32, -0.063 * tile.px.y as f32, -0.5),
+            Mesh3d(floor.clone()),
+            MeshMaterial3d(
+                material_map
                     .get(&(tile.src.x, tile.src.y))
                     .unwrap_or(&missing_material)
                     .clone(),
-                ..Default::default()
-            },
+            ),
             RenderLayers::layer(1),
         ));
     }
