@@ -3,7 +3,7 @@ use bevy::{
     prelude::*,
 };
 
-use crate::{camera::Player, spawning::Collider};
+use crate::{camera::PlayerCamera, spawning::Collider};
 
 enum Collision {
     North,
@@ -13,8 +13,8 @@ enum Collision {
 }
 
 pub fn collisions_system(
-    mut query_player: Query<&mut Transform, With<Player>>,
-    query_colliders: Query<&Transform, (With<Collider>, Without<Player>)>,
+    mut query_player: Query<&mut Transform, With<PlayerCamera>>,
+    query_colliders: Query<&Transform, (With<Collider>, Without<PlayerCamera>)>,
 ) {
     let mut player_transform = query_player.single_mut();
 

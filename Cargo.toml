@@ -4,16 +4,16 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-bevy = { version = "0.15.2", features = [ "dynamic_linking", "file_watcher" ]}
+bevy = { version = "0.15.3", features = [ "dynamic_linking", "file_watcher" ]}
 ratatui = "0.29.0"
-bevy_ratatui_camera = "0.8.2"
+bevy_ratatui_camera = "0.10.0"
 bevy_ratatui = "0.7.0"
 bevy_ecs_ldtk = "0.11.0"
 bevy_asset_loader = "0.22.0"
 crossterm = "0.28.0"
 dotenv = "0.15.0"
 image = "0.25.5"
-# image = "0.24"
+tui-logger = "0.14.5"
 
 [profile.dev]
 opt-level = 1

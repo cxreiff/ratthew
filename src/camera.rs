@@ -6,7 +6,7 @@ use bevy::{
     render::view::RenderLayers,
     utils::{error, HashMap},
 };
-use bevy_ratatui_camera::{RatatuiCamera, RatatuiCameraStrategy};
+use bevy_ratatui_camera::{LuminanceConfig, RatatuiCamera, RatatuiCameraStrategy};
 use crossterm::event::KeyCode;
 
 use crate::loading::{GameAssets, GameStates};
@@ -27,7 +27,10 @@ impl Plugin for ViewCameraPlugin {
 }
 
 #[derive(Component)]
-pub struct Player;
+pub struct PlayerCamera;
+
+#[derive(Component)]
+pub struct WorldCamera;
 
 #[derive(Component)]
 pub struct Sword;
@@ -47,10 +50,15 @@ fn setup_camera_system(
                 ..default()
             },
             Camera3d::default(),
-            Transform::from_translation(Vec3::new(3., -8., 0.)).looking_at(Vec3::ZERO, Vec3::Z),
-            RatatuiCamera::autoresize(),
-            RatatuiCameraStrategy::luminance_braille(),
-            Player,
+            Transform::from_translation(Vec3::new(3., -13., 0.))
+                .looking_at(Vec3::new(2., -13., 0.), Vec3::Z),
+            RatatuiCamera::default(),
+            RatatuiCameraStrategy::Luminance(LuminanceConfig {
+                mask_color: Some(ratatui::style::Color::Rgb(0, 0, 0)),
+                luminance_characters: LuminanceConfig::LUMINANCE_CHARACTERS_SHADING.into(),
+                ..default()
+            }),
+            PlayerCamera,
         ))
         .with_children(|parent| {
             parent.spawn(PointLight {
@@ -61,8 +69,9 @@ fn setup_camera_system(
             parent.spawn((
                 Camera3d::default(),
                 RenderLayers::layer(1),
-                RatatuiCamera::autoresize(),
+                RatatuiCamera::default(),
                 RatatuiCameraStrategy::luminance_misc(),
+                WorldCamera,
             ));
 
             if let Some(gltf) = assets_gltf.get(&handles.sword) {
@@ -91,7 +100,7 @@ fn setup_camera_system(
 }
 
 pub fn move_camera_system(
-    mut q_camera: Query<&mut Transform, With<Player>>,
+    mut q_camera: Query<&mut Transform, With<PlayerCamera>>,
     keys_down: Res<KeysDown>,
     time: Res<Time>,
 ) -> io::Result<()> {
