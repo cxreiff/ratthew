@@ -29,7 +29,7 @@ pub fn spawn_layer_walls(
 
     for tile in layer.auto_layer_tiles.iter() {
         commands.spawn((
-            Transform::from_xyz(0.063 * tile.px.x as f32, -0.063 * tile.px.y as f32, 0.0),
+            Transform::from_xyz(0.0625 * tile.px.x as f32, -0.0625 * tile.px.y as f32, 0.0),
             Mesh3d(cube.clone()),
             MeshMaterial3d(
                 material_map
@@ -61,7 +61,7 @@ pub fn spawn_layer_floor(
 
     for tile in layer.grid_tiles.iter() {
         commands.spawn((
-            Transform::from_xyz(0.063 * tile.px.x as f32, -0.063 * tile.px.y as f32, -0.5),
+            Transform::from_xyz(0.0625 * tile.px.x as f32, -0.0625 * tile.px.y as f32, -0.5),
             Mesh3d(floor.clone()),
             MeshMaterial3d(
                 material_map

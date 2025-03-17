@@ -6,10 +6,14 @@ use bevy::{
     render::view::RenderLayers,
     utils::{error, HashMap},
 };
+use bevy_hanabi::{ParticleEffect, ParticleEffectBundle};
 use bevy_ratatui_camera::{LuminanceConfig, RatatuiCamera, RatatuiCameraStrategy};
 use crossterm::event::KeyCode;
 
-use crate::loading::{GameAssets, GameStates};
+use crate::{
+    loading::{GameAssets, GameStates},
+    particles::GradientEffect,
+};
 
 pub struct ViewCameraPlugin;
 
@@ -31,6 +35,9 @@ pub struct PlayerCamera;
 
 #[derive(Component)]
 pub struct WorldCamera;
+
+#[derive(Component)]
+pub struct ParticleCamera;
 
 #[derive(Component)]
 pub struct Sword;
@@ -70,8 +77,22 @@ fn setup_camera_system(
                 Camera3d::default(),
                 RenderLayers::layer(1),
                 RatatuiCamera::default(),
-                RatatuiCameraStrategy::luminance_misc(),
                 WorldCamera,
+            ));
+            parent.spawn((
+                Camera {
+                    order: 2,
+                    ..default()
+                },
+                Camera3d::default(),
+                RenderLayers::layer(2),
+                RatatuiCamera::default(),
+                RatatuiCameraStrategy::Luminance(LuminanceConfig {
+                    mask_color: Some(ratatui::style::Color::Rgb(0, 0, 0)),
+                    luminance_characters: LuminanceConfig::LUMINANCE_CHARACTERS_MISC.into(),
+                    ..default()
+                }),
+                ParticleCamera,
             ));
 
             if let Some(gltf) = assets_gltf.get(&handles.sword) {
@@ -100,9 +121,11 @@ fn setup_camera_system(
 }
 
 pub fn move_camera_system(
+    mut commands: Commands,
     mut q_camera: Query<&mut Transform, With<PlayerCamera>>,
     keys_down: Res<KeysDown>,
     time: Res<Time>,
+    effect: Res<GradientEffect>,
 ) -> io::Result<()> {
     let mut camera_transform = q_camera.single_mut();
     for (key, _) in keys_down.iter() {
@@ -121,9 +144,13 @@ pub fn move_camera_system(
             KeyCode::Right => {
                 camera_transform.rotate_local_y(-time.delta_secs() * 1.8);
             }
-            KeyCode::Char(' ') => {
-                *camera_transform = Transform::from_xyz(0., 10., 0.);
-                camera_transform.look_at(-Vec3::Y, Vec3::Z)
+            KeyCode::Char('g') => {
+                bevy::log::info!("SPAWN");
+                commands.spawn(ParticleEffectBundle {
+                    effect: ParticleEffect::new(effect.0.clone()),
+                    transform: Transform::from_xyz(3., -10., 0.),
+                    ..Default::default()
+                });
             }
             _ => {}
         }
