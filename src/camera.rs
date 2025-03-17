@@ -52,6 +52,7 @@ fn setup_camera_system(
 ) {
     commands
         .spawn((
+            RenderLayers::layer(0),
             Camera {
                 order: 1,
                 ..default()
@@ -68,33 +69,22 @@ fn setup_camera_system(
             PlayerCamera,
         ))
         .with_children(|parent| {
-            parent.spawn(PointLight {
-                intensity: 100000.,
-                shadows_enabled: true,
-                ..default()
-            });
             parent.spawn((
-                Camera3d::default(),
-                RenderLayers::layer(1),
-                RatatuiCamera::default(),
-                WorldCamera,
-            ));
-            parent.spawn((
-                Camera {
-                    order: 2,
+                RenderLayers::layer(0),
+                PointLight {
+                    intensity: 100000.,
+                    shadows_enabled: true,
                     ..default()
                 },
-                Camera3d::default(),
-                RenderLayers::layer(2),
-                RatatuiCamera::default(),
-                RatatuiCameraStrategy::Luminance(LuminanceConfig {
-                    mask_color: Some(ratatui::style::Color::Rgb(0, 0, 0)),
-                    luminance_characters: LuminanceConfig::LUMINANCE_CHARACTERS_MISC.into(),
-                    ..default()
-                }),
-                ParticleCamera,
             ));
 
+            parent.spawn((
+                RenderLayers::layer(1),
+                Camera3d::default(),
+                RatatuiCamera::default(),
+                RatatuiCameraStrategy::luminance_braille(),
+                WorldCamera,
+            ));
             if let Some(gltf) = assets_gltf.get(&handles.sword) {
                 let mut sword_transform =
                     Transform::from_xyz(0.3, -0.15, -0.7).with_scale(Vec3::new(0.4, 0.4, 0.4));
@@ -103,19 +93,35 @@ fn setup_camera_system(
                 sword_transform.rotate_local_z(-0.15);
 
                 parent.spawn((
+                    RenderLayers::layer(1),
                     SceneRoot(gltf.scenes[0].clone()),
                     sword_transform,
                     Sword,
-                    RenderLayers::layer(1),
                 ));
             }
             parent.spawn((
+                RenderLayers::layer(1),
                 PointLight {
                     intensity: 100000.,
                     shadows_enabled: true,
                     ..default()
                 },
-                RenderLayers::layer(1),
+            ));
+
+            parent.spawn((
+                RenderLayers::layer(2),
+                Camera {
+                    order: 2,
+                    ..default()
+                },
+                Camera3d::default(),
+                RatatuiCamera::default(),
+                RatatuiCameraStrategy::Luminance(LuminanceConfig {
+                    mask_color: Some(ratatui::style::Color::Rgb(0, 0, 0)),
+                    luminance_characters: LuminanceConfig::LUMINANCE_CHARACTERS_MISC.into(),
+                    ..default()
+                }),
+                ParticleCamera,
             ));
         });
 }
