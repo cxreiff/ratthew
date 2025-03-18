@@ -2,7 +2,7 @@ use bevy::{prelude::*, render::view::RenderLayers};
 use bevy_hanabi::prelude::*;
 
 pub(super) fn plugin(app: &mut App) {
-    app.add_systems(Startup, setup);
+    app.add_plugins(HanabiPlugin).add_systems(Startup, setup);
 }
 
 #[derive(Resource)]

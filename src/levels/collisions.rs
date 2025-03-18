@@ -3,7 +3,16 @@ use bevy::{
     prelude::*,
 };
 
-use crate::{camera::PlayerCamera, spawning::Collider};
+use crate::{camera::PlayerCamera, GameStates};
+
+use super::loading::Collider;
+
+pub(super) fn plugin(app: &mut App) {
+    app.add_systems(
+        Update,
+        collisions_system.run_if(in_state(GameStates::Playing)),
+    );
+}
 
 enum Collision {
     North,

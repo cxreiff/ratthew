@@ -8,12 +8,8 @@ use bevy::{
 };
 use bevy_hanabi::{ParticleEffect, ParticleEffectBundle};
 use bevy_ratatui_camera::{LuminanceConfig, RatatuiCamera, RatatuiCameraStrategy};
-use crossterm::event::KeyCode;
 
-use crate::{
-    loading::{GameAssets, GameStates},
-    particles::GradientEffect,
-};
+use crate::{levels::loading::GameAssets, particles::GradientEffect, Flags, GameStates};
 
 pub struct ViewCameraPlugin;
 
@@ -82,7 +78,7 @@ fn setup_camera_system(
                 RenderLayers::layer(1),
                 Camera3d::default(),
                 RatatuiCamera::default(),
-                RatatuiCameraStrategy::luminance_braille(),
+                RatatuiCameraStrategy::luminance_misc(),
                 WorldCamera,
             ));
             if let Some(gltf) = assets_gltf.get(&handles.sword) {
@@ -129,34 +125,51 @@ fn setup_camera_system(
 pub fn move_camera_system(
     mut commands: Commands,
     mut q_camera: Query<&mut Transform, With<PlayerCamera>>,
-    keys_down: Res<KeysDown>,
+    input: Res<ButtonInput<KeyCode>>,
     time: Res<Time>,
-    effect: Res<GradientEffect>,
+    mut exit: EventWriter<AppExit>,
+    mut flags: ResMut<Flags>,
+    effect_handle: Res<GradientEffect>,
 ) -> io::Result<()> {
     let mut camera_transform = q_camera.single_mut();
-    for (key, _) in keys_down.iter() {
-        match key {
-            KeyCode::Up => {
+
+    for press in input.get_pressed() {
+        match press {
+            KeyCode::ArrowUp => {
                 let forward = camera_transform.forward().normalize();
                 camera_transform.translation += forward / 16.;
             }
-            KeyCode::Down => {
+            KeyCode::ArrowDown => {
                 let back = camera_transform.back().normalize();
                 camera_transform.translation += back / 16.;
             }
-            KeyCode::Left => {
+            KeyCode::ArrowLeft => {
                 camera_transform.rotate_local_y(time.delta_secs() * 1.8);
             }
-            KeyCode::Right => {
+            KeyCode::ArrowRight => {
                 camera_transform.rotate_local_y(-time.delta_secs() * 1.8);
             }
-            KeyCode::Char('g') => {
-                bevy::log::info!("SPAWN");
-                commands.spawn(ParticleEffectBundle {
-                    effect: ParticleEffect::new(effect.0.clone()),
-                    transform: Transform::from_xyz(3., -10., 0.),
-                    ..Default::default()
-                });
+            _ => {}
+        }
+    }
+
+    for press in input.get_just_pressed() {
+        match press {
+            KeyCode::KeyQ => {
+                exit.send_default();
+            }
+            KeyCode::KeyD => {
+                flags.debug = !flags.debug;
+            }
+            KeyCode::KeyG => {
+                commands.spawn((
+                    ParticleEffectBundle {
+                        effect: ParticleEffect::new(effect_handle.0.clone()),
+                        transform: Transform::from_xyz(3., -8., 0.),
+                        ..Default::default()
+                    },
+                    RenderLayers::layer(2),
+                ));
             }
             _ => {}
         }
