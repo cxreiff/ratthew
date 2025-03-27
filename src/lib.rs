@@ -15,10 +15,10 @@ mod levels;
 mod particles;
 mod widgets;
 
-#[cfg(not(feature = "windowed"))]
+#[cfg(not(feature = "egui"))]
 mod terminal;
 
-#[cfg(feature = "windowed")]
+#[cfg(feature = "egui")]
 mod windowed;
 
 #[derive(Component)]
@@ -39,13 +39,13 @@ pub enum GameStates {
 pub fn plugin(app: &mut App) {
     let mut default_plugins = DefaultPlugins.set(ImagePlugin::default_nearest());
 
-    if cfg!(not(feature = "windowed")) {
+    if cfg!(not(feature = "egui")) {
         default_plugins = default_plugins
             .disable::<LogPlugin>()
             .disable::<WinitPlugin>();
     }
 
-    if cfg!(feature = "windowed") {
+    if cfg!(feature = "egui") {
         default_plugins = default_plugins.set(WindowPlugin {
             primary_window: Some(Window {
                 // resolution: WindowResolution::default().with_scale_factor_override(1.0),
@@ -64,9 +64,9 @@ pub fn plugin(app: &mut App) {
         particles::plugin,
         levels::plugin,
         grid::plugin,
-        #[cfg(not(feature = "windowed"))]
+        #[cfg(not(feature = "egui"))]
         terminal::plugin,
-        #[cfg(feature = "windowed")]
+        #[cfg(feature = "egui")]
         windowed::plugin,
     ))
     .insert_resource(Flags { debug: false })

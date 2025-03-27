@@ -28,4 +28,4 @@ opt-level = 1
 opt-level = 3
 
 [features]
-windowed = ["dep:bevy_egui", "dep:egui", "dep:egui_ratatui"]
+egui = ["dep:bevy_egui", "dep:egui", "dep:egui_ratatui"]
