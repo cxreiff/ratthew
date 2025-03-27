@@ -3,12 +3,15 @@ use std::time::Duration;
 
 use bevy::app::ScheduleRunnerPlugin;
 use bevy::diagnostic::DiagnosticsStore;
+use bevy::log::tracing_subscriber;
+use bevy::log::tracing_subscriber::layer::SubscriberExt;
+use bevy::log::tracing_subscriber::util::SubscriberInitExt;
 use bevy::prelude::*;
 use bevy::utils::error;
 use bevy_ratatui::kitty::KittyEnabled;
 use bevy_ratatui::terminal::RatatuiContext;
 use bevy_ratatui::RatatuiPlugins;
-use bevy_ratatui_camera::{RatatuiCameraPlugin, RatatuiCameraWidget};
+use bevy_ratatui_camera::RatatuiCameraWidget;
 
 use crate::camera::{ParticleCamera, PlayerCamera, WorldCamera};
 use crate::widgets::debug_frame::debug_frame;
@@ -16,11 +19,18 @@ use crate::Flags;
 use crate::GameStates;
 
 pub(super) fn plugin(app: &mut App) {
-    app.add_plugins((RatatuiCameraPlugin,));
+    // Send logs to tui-logger
+    tracing_subscriber::registry()
+        .with(Some(tui_logger::tracing_subscriber_layer()))
+        .init();
+    tui_logger::init_logger(tui_logger::LevelFilter::Info).unwrap();
 
     app.add_plugins((
         ScheduleRunnerPlugin::run_loop(Duration::from_secs_f32(1. / 90.)),
-        RatatuiPlugins::default(),
+        RatatuiPlugins {
+            enable_input_forwarding: true,
+            ..default()
+        },
     ))
     .add_systems(
         Update,

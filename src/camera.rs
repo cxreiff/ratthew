@@ -7,9 +7,15 @@ use bevy::{
     utils::{error, HashMap},
 };
 use bevy_hanabi::{ParticleEffect, ParticleEffectBundle};
-use bevy_ratatui_camera::{LuminanceConfig, RatatuiCamera, RatatuiCameraStrategy};
+use bevy_ratatui_camera::{RatatuiCamera, RatatuiCameraStrategy};
+use bevy_tween::tween::AnimationTarget;
 
-use crate::{levels::loading::GameAssets, particles::GradientEffect, Flags, GameStates};
+use crate::{
+    grid::{GridCardinalDirection, GridPosition},
+    levels::loading::GameAssets,
+    particles::GradientEffect,
+    Flags, GameStates,
+};
 
 pub struct ViewCameraPlugin;
 
@@ -51,18 +57,18 @@ fn setup_camera_system(
             RenderLayers::layer(0),
             Camera {
                 order: 1,
+                clear_color: ClearColorConfig::Custom(Color::srgba(0., 0., 0., 0.)),
                 ..default()
             },
             Camera3d::default(),
             Transform::from_translation(Vec3::new(3., -13., 0.))
                 .looking_at(Vec3::new(2., -13., 0.), Vec3::Z),
             RatatuiCamera::default(),
-            RatatuiCameraStrategy::Luminance(LuminanceConfig {
-                mask_color: Some(ratatui::style::Color::Rgb(0, 0, 0)),
-                luminance_characters: LuminanceConfig::LUMINANCE_CHARACTERS_SHADING.into(),
-                ..default()
-            }),
+            RatatuiCameraStrategy::luminance_shading(),
             PlayerCamera,
+            GridPosition(IVec3::new(2, -13, 0)),
+            GridCardinalDirection::North,
+            AnimationTarget,
         ))
         .with_children(|parent| {
             parent.spawn((
@@ -108,15 +114,12 @@ fn setup_camera_system(
                 RenderLayers::layer(2),
                 Camera {
                     order: 2,
+                    clear_color: ClearColorConfig::Custom(Color::srgba(0., 0., 0., 0.)),
                     ..default()
                 },
                 Camera3d::default(),
                 RatatuiCamera::default(),
-                RatatuiCameraStrategy::Luminance(LuminanceConfig {
-                    mask_color: Some(ratatui::style::Color::Rgb(0, 0, 0)),
-                    luminance_characters: LuminanceConfig::LUMINANCE_CHARACTERS_MISC.into(),
-                    ..default()
-                }),
+                RatatuiCameraStrategy::luminance_misc(),
                 ParticleCamera,
             ));
         });
@@ -124,41 +127,17 @@ fn setup_camera_system(
 
 pub fn move_camera_system(
     mut commands: Commands,
-    mut q_camera: Query<&mut Transform, With<PlayerCamera>>,
     input: Res<ButtonInput<KeyCode>>,
-    time: Res<Time>,
     mut exit: EventWriter<AppExit>,
     mut flags: ResMut<Flags>,
     effect_handle: Res<GradientEffect>,
 ) -> io::Result<()> {
-    let mut camera_transform = q_camera.single_mut();
-
-    for press in input.get_pressed() {
-        match press {
-            KeyCode::ArrowUp => {
-                let forward = camera_transform.forward().normalize();
-                camera_transform.translation += forward / 16.;
-            }
-            KeyCode::ArrowDown => {
-                let back = camera_transform.back().normalize();
-                camera_transform.translation += back / 16.;
-            }
-            KeyCode::ArrowLeft => {
-                camera_transform.rotate_local_y(time.delta_secs() * 1.8);
-            }
-            KeyCode::ArrowRight => {
-                camera_transform.rotate_local_y(-time.delta_secs() * 1.8);
-            }
-            _ => {}
-        }
-    }
-
     for press in input.get_just_pressed() {
         match press {
-            KeyCode::KeyQ => {
+            KeyCode::Escape => {
                 exit.send_default();
             }
-            KeyCode::KeyD => {
+            KeyCode::Tab => {
                 flags.debug = !flags.debug;
             }
             KeyCode::KeyG => {
