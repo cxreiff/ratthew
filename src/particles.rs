@@ -5,8 +5,8 @@ pub(super) fn plugin(app: &mut App) {
     app.add_plugins(HanabiPlugin).add_systems(Startup, setup);
 }
 
-#[derive(Resource)]
-pub struct GradientEffect(pub Handle<EffectAsset>);
+// #[derive(Resource)]
+// pub struct GradientEffect(pub Handle<EffectAsset>);
 
 fn setup(mut commands: Commands, mut effects: ResMut<Assets<EffectAsset>>) {
     let mut gradient = Gradient::new();
@@ -61,5 +61,5 @@ fn setup(mut commands: Commands, mut effects: ResMut<Assets<EffectAsset>>) {
         RenderLayers::layer(2),
     ));
 
-    commands.insert_resource(GradientEffect(effect_handle));
+    // commands.insert_resource(GradientEffect(effect_handle));
 }

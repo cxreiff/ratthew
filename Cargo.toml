@@ -29,3 +29,6 @@ opt-level = 3
 
 [features]
 egui = ["dep:bevy_egui", "dep:egui", "dep:egui_ratatui"]
+
+[lints.clippy]
+type_complexity = "allow"

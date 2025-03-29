@@ -1,12 +1,13 @@
 use animation::sword_bob_system;
 use bevy::diagnostic::FrameTimeDiagnosticsPlugin;
+use bevy::input::common_conditions::input_just_pressed;
 use bevy::log::LogPlugin;
 use bevy::prelude::*;
+use bevy::window::WindowMode;
 // use bevy::window::WindowResolution;
 use bevy::winit::WinitPlugin;
 use bevy_ratatui_camera::RatatuiCameraPlugin;
 use bevy_tween::DefaultTweenPlugins;
-use camera::ViewCameraPlugin;
 
 mod animation;
 mod camera;
@@ -19,7 +20,7 @@ mod widgets;
 mod terminal;
 
 #[cfg(feature = "egui")]
-mod windowed;
+mod egui;
 
 #[derive(Component)]
 pub struct Cube;
@@ -48,6 +49,7 @@ pub fn plugin(app: &mut App) {
     if cfg!(feature = "egui") {
         default_plugins = default_plugins.set(WindowPlugin {
             primary_window: Some(Window {
+                mode: WindowMode::BorderlessFullscreen(MonitorSelection::Primary),
                 // resolution: WindowResolution::default().with_scale_factor_override(1.0),
                 ..default()
             }),
@@ -60,19 +62,29 @@ pub fn plugin(app: &mut App) {
         DefaultTweenPlugins,
         RatatuiCameraPlugin,
         FrameTimeDiagnosticsPlugin,
-        ViewCameraPlugin,
+        camera::plugin,
         particles::plugin,
         levels::plugin,
         grid::plugin,
         #[cfg(not(feature = "egui"))]
         terminal::plugin,
         #[cfg(feature = "egui")]
-        windowed::plugin,
+        egui::plugin,
     ))
     .insert_resource(Flags { debug: false })
     .insert_resource(ClearColor(Color::BLACK))
     .add_systems(
         Update,
-        sword_bob_system.run_if(in_state(GameStates::Playing)),
+        (
+            sword_bob_system.run_if(in_state(GameStates::Playing)),
+            debug_print_world_system
+                .run_if(in_state(GameStates::Playing))
+                .run_if(input_just_pressed(KeyCode::KeyP)),
+        ),
     );
+}
+
+fn debug_print_world_system(world: &World) {
+    let num = world.entities().len();
+    log::info!("{num}");
 }

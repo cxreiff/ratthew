@@ -6,30 +6,20 @@ use bevy::{
     render::view::RenderLayers,
     utils::{error, HashMap},
 };
-use bevy_hanabi::{ParticleEffect, ParticleEffectBundle};
 use bevy_ratatui_camera::{RatatuiCamera, RatatuiCameraStrategy};
 use bevy_tween::tween::AnimationTarget;
 
-use crate::{
-    grid::{GridCardinalDirection, GridPosition},
-    levels::loading::GameAssets,
-    particles::GradientEffect,
-    Flags, GameStates,
-};
+use crate::{grid::GridPosition, levels::loading::GameAssets, Flags, GameStates};
 
-pub struct ViewCameraPlugin;
-
-impl Plugin for ViewCameraPlugin {
-    fn build(&self, app: &mut App) {
-        app.init_resource::<KeysDown>()
-            .add_systems(OnEnter(GameStates::Playing), setup_camera_system)
-            .add_systems(
-                Update,
-                move_camera_system
-                    .map(error)
-                    .run_if(in_state(GameStates::Playing)),
-            );
-    }
+pub(crate) fn plugin(app: &mut App) {
+    app.init_resource::<KeysDown>()
+        .add_systems(OnEnter(GameStates::Playing), setup_camera_system)
+        .add_systems(
+            Update,
+            move_camera_system
+                .map(error)
+                .run_if(in_state(GameStates::Playing)),
+        );
 }
 
 #[derive(Component)]
@@ -62,12 +52,11 @@ fn setup_camera_system(
             },
             Camera3d::default(),
             Transform::from_translation(Vec3::new(3., -13., 0.))
-                .looking_at(Vec3::new(2., -13., 0.), Vec3::Z),
+                .looking_at(Vec3::new(3., -12., 0.), Vec3::Z),
             RatatuiCamera::default(),
             RatatuiCameraStrategy::luminance_shading(),
             PlayerCamera,
-            GridPosition(IVec3::new(2, -13, 0)),
-            GridCardinalDirection::North,
+            GridPosition(IVec3::new(3, -13, 0)),
             AnimationTarget,
         ))
         .with_children(|parent| {
@@ -126,11 +115,9 @@ fn setup_camera_system(
 }
 
 pub fn move_camera_system(
-    mut commands: Commands,
     input: Res<ButtonInput<KeyCode>>,
     mut exit: EventWriter<AppExit>,
     mut flags: ResMut<Flags>,
-    effect_handle: Res<GradientEffect>,
 ) -> io::Result<()> {
     for press in input.get_just_pressed() {
         match press {
@@ -139,16 +126,6 @@ pub fn move_camera_system(
             }
             KeyCode::Tab => {
                 flags.debug = !flags.debug;
-            }
-            KeyCode::KeyG => {
-                commands.spawn((
-                    ParticleEffectBundle {
-                        effect: ParticleEffect::new(effect_handle.0.clone()),
-                        transform: Transform::from_xyz(3., -8., 0.),
-                        ..Default::default()
-                    },
-                    RenderLayers::layer(2),
-                ));
             }
             _ => {}
         }
