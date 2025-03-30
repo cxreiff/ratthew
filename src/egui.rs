@@ -9,7 +9,7 @@ use egui_ratatui::RataguiBackend;
 use ratatui::Terminal;
 
 use crate::{
-    camera::{ParticleCamera, PlayerCamera, WorldCamera},
+    camera::{PlayerCamera, WorldCamera},
     widgets::debug_frame::debug_frame,
     Flags,
 };
@@ -39,7 +39,6 @@ fn draw_scene_system(
     mut egui: EguiContexts,
     player_widget: Query<&RatatuiCameraWidget, With<PlayerCamera>>,
     world_widget: Query<&RatatuiCameraWidget, With<WorldCamera>>,
-    particle_widget: Query<&RatatuiCameraWidget, With<ParticleCamera>>,
     flags: Res<Flags>,
     diagnostics: Res<DiagnosticsStore>,
     kitty_enabled: Option<Res<KittyEnabled>>,
@@ -48,9 +47,6 @@ fn draw_scene_system(
         let area = debug_frame(frame, &flags, &diagnostics, kitty_enabled.as_deref());
 
         if let Ok(w) = world_widget.get_single() {
-            w.render_autoresize(area, frame.buffer_mut(), &mut commands);
-        }
-        if let Ok(w) = particle_widget.get_single() {
             w.render_autoresize(area, frame.buffer_mut(), &mut commands);
         }
         if let Ok(w) = player_widget.get_single() {

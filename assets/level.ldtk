@@ -481,7 +481,7 @@
 						},
 						{
 							"__identifier": "Player",
-							"__grid": [3,12],
+							"__grid": [5,5],
 							"__pivot": [0,0],
 							"__tags": [],
 							"__tile": { "tilesetUid": 12, "x": 0, "y": 0, "w": 16, "h": 16 },
@@ -490,7 +490,7 @@
 							"width": 16,
 							"height": 16,
 							"defUid": 11,
-							"px": [48,192],
+							"px": [80,80],
 							"fieldInstances": []
 						}
 					]

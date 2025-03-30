@@ -16,7 +16,7 @@ use bevy_ratatui::RatatuiPlugins;
 use bevy_ratatui_camera::RatatuiCameraWidget;
 use crossterm::event::KeyEventKind;
 
-use crate::camera::{ParticleCamera, PlayerCamera, WorldCamera};
+use crate::camera::{PlayerCamera, WorldCamera};
 use crate::widgets::debug_frame::debug_frame;
 use crate::Flags;
 use crate::GameStates;
@@ -48,7 +48,6 @@ fn draw_scene_system(
     mut ratatui: ResMut<RatatuiContext>,
     player_widget: Query<&RatatuiCameraWidget, With<PlayerCamera>>,
     world_widget: Query<&RatatuiCameraWidget, With<WorldCamera>>,
-    particle_widget: Query<&RatatuiCameraWidget, With<ParticleCamera>>,
     flags: Res<Flags>,
     diagnostics: Res<DiagnosticsStore>,
     kitty_enabled: Option<Res<KittyEnabled>>,
@@ -57,9 +56,6 @@ fn draw_scene_system(
         let area = debug_frame(frame, &flags, &diagnostics, kitty_enabled.as_deref());
 
         if let Ok(w) = world_widget.get_single() {
-            w.render_autoresize(area, frame.buffer_mut(), &mut commands);
-        }
-        if let Ok(w) = particle_widget.get_single() {
             w.render_autoresize(area, frame.buffer_mut(), &mut commands);
         }
         if let Ok(w) = player_widget.get_single() {

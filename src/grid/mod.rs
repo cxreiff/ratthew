@@ -5,6 +5,8 @@ mod input;
 mod movement;
 mod position;
 
+pub use direction::{Direction, GridDirection};
+pub use movement::GridAnimated;
 pub use position::GridPosition;
 
 pub(super) fn plugin(app: &mut App) {

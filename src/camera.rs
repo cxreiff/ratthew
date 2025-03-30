@@ -1,15 +1,19 @@
 use std::io;
 
 use bevy::{
+    core_pipeline::Skybox,
     gltf::Gltf,
     prelude::*,
     render::view::RenderLayers,
     utils::{error, HashMap},
 };
 use bevy_ratatui_camera::{RatatuiCamera, RatatuiCameraStrategy};
-use bevy_tween::tween::AnimationTarget;
 
-use crate::{grid::GridPosition, levels::loading::GameAssets, Flags, GameStates};
+use crate::{
+    grid::{Direction, GridAnimated, GridDirection, GridPosition},
+    levels::loading::GameAssets,
+    Flags, GameStates,
+};
 
 pub(crate) fn plugin(app: &mut App) {
     app.init_resource::<KeysDown>()
@@ -29,9 +33,6 @@ pub struct PlayerCamera;
 pub struct WorldCamera;
 
 #[derive(Component)]
-pub struct ParticleCamera;
-
-#[derive(Component)]
 pub struct Sword;
 
 #[derive(Resource, Default, Deref, DerefMut, Debug)]
@@ -41,6 +42,7 @@ fn setup_camera_system(
     mut commands: Commands,
     handles: Res<GameAssets>,
     assets_gltf: Res<Assets<Gltf>>,
+    asset_server: Res<AssetServer>,
 ) {
     commands
         .spawn((
@@ -57,7 +59,8 @@ fn setup_camera_system(
             RatatuiCameraStrategy::luminance_shading(),
             PlayerCamera,
             GridPosition(IVec3::new(3, -13, 0)),
-            AnimationTarget,
+            GridDirection(Direction::North),
+            GridAnimated,
         ))
         .with_children(|parent| {
             parent.spawn((
@@ -75,6 +78,11 @@ fn setup_camera_system(
                 RatatuiCamera::default(),
                 RatatuiCameraStrategy::luminance_misc(),
                 WorldCamera,
+                Skybox {
+                    image: asset_server.load("skybox.ktx2"),
+                    brightness: 1000.,
+                    ..default()
+                },
             ));
             if let Some(gltf) = assets_gltf.get(&handles.sword) {
                 let mut sword_transform =
@@ -97,19 +105,6 @@ fn setup_camera_system(
                     shadows_enabled: true,
                     ..default()
                 },
-            ));
-
-            parent.spawn((
-                RenderLayers::layer(2),
-                Camera {
-                    order: 2,
-                    clear_color: ClearColorConfig::Custom(Color::srgba(0., 0., 0., 0.)),
-                    ..default()
-                },
-                Camera3d::default(),
-                RatatuiCamera::default(),
-                RatatuiCameraStrategy::luminance_misc(),
-                ParticleCamera,
             ));
         });
 }

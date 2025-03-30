@@ -9,9 +9,10 @@ use bevy_ecs_ldtk::{
     assets::{LdtkAssetPlugin, LdtkProject},
     ldtk::{LayerInstance, TileInstance},
 };
+use bevy_hanabi::{ParticleEffect, ParticleEffectBundle};
 use image::DynamicImage;
 
-use crate::GameStates;
+use crate::{grid::GridPosition, particles::GradientEffect, GameStates};
 
 use super::cube::UprightCube;
 
@@ -43,9 +44,13 @@ fn level_setup_system(
     handles: Res<GameAssets>,
     ldtk_assets: Res<Assets<LdtkProject>>,
     mut images: ResMut<Assets<Image>>,
+    particle_handle: Res<GradientEffect>,
 ) {
     let tileset = images.get(&handles.tileset).unwrap();
     let mut tileset = tileset.clone().try_into_dynamic().unwrap();
+
+    let missing_material = materials.add(StandardMaterial::from(Color::srgb(1., 0., 0.)));
+    let cube_mesh = meshes.add(UprightCube);
 
     if let Some(ldtk) = ldtk_assets.get(&handles.level) {
         if let Some(level) = ldtk.as_standalone().iter_loaded_levels().next() {
@@ -53,27 +58,32 @@ fn level_setup_system(
                 match layer.layer_instance_type {
                     bevy_ecs_ldtk::ldtk::Type::AutoLayer => spawn_layer_walls(
                         &mut commands,
-                        &mut meshes,
                         &mut materials,
                         &mut images,
                         &mut tileset,
+                        &missing_material,
+                        &cube_mesh,
                         layer,
                     ),
-                    bevy_ecs_ldtk::ldtk::Type::Entities => {}
+                    bevy_ecs_ldtk::ldtk::Type::Entities => {
+                        spawn_layer_entities(commands.reborrow(), &particle_handle, layer)
+                    }
                     bevy_ecs_ldtk::ldtk::Type::IntGrid => spawn_layer_walls(
                         &mut commands,
-                        &mut meshes,
                         &mut materials,
                         &mut images,
                         &mut tileset,
+                        &missing_material,
+                        &cube_mesh,
                         layer,
                     ),
                     bevy_ecs_ldtk::ldtk::Type::Tiles => spawn_layer_floor(
                         &mut commands,
-                        &mut meshes,
                         &mut materials,
                         &mut images,
                         &mut tileset,
+                        &missing_material,
+                        &cube_mesh,
                         layer,
                     ),
                 }
@@ -87,28 +97,27 @@ pub struct Collider;
 
 pub fn spawn_layer_walls(
     commands: &mut Commands,
-    meshes: &mut ResMut<Assets<Mesh>>,
     materials: &mut ResMut<Assets<StandardMaterial>>,
     images: &mut ResMut<Assets<Image>>,
     tileset: &mut DynamicImage,
+    missing_material: &Handle<StandardMaterial>,
+    cube_mesh: &Handle<Mesh>,
     layer: &LayerInstance,
 ) {
-    let cube = meshes.add(UprightCube);
-    let missing_material = materials.add(StandardMaterial {
-        base_color: Color::srgb(1., 0., 0.),
-        ..Default::default()
-    });
-
     let material_map = generate_material_map(materials, images, tileset, &layer.auto_layer_tiles);
 
     for tile in layer.auto_layer_tiles.iter() {
         commands.spawn((
-            Transform::from_xyz(0.0625 * tile.px.x as f32, -0.0625 * tile.px.y as f32, 0.0),
-            Mesh3d(cube.clone()),
+            GridPosition(IVec3::new(
+                tile.px.x / layer.c_hei,
+                -tile.px.y / layer.c_hei,
+                0,
+            )),
+            Mesh3d(cube_mesh.clone()),
             MeshMaterial3d(
                 material_map
                     .get(&(tile.src.x, tile.src.y))
-                    .unwrap_or(&missing_material)
+                    .unwrap_or(missing_material)
                     .clone(),
             ),
             RenderLayers::layer(1),
@@ -119,30 +128,50 @@ pub fn spawn_layer_walls(
 
 pub fn spawn_layer_floor(
     commands: &mut Commands,
-    meshes: &mut ResMut<Assets<Mesh>>,
     materials: &mut ResMut<Assets<StandardMaterial>>,
     images: &mut ResMut<Assets<Image>>,
     tileset: &mut DynamicImage,
+    missing_material: &Handle<StandardMaterial>,
+    cube_mesh: &Handle<Mesh>,
     layer: &LayerInstance,
 ) {
-    let floor = meshes.add(Cuboid::new(1., 1., 0.1));
-    let missing_material = materials.add(StandardMaterial {
-        base_color: Color::srgb(1., 0., 0.),
-        ..Default::default()
-    });
-
     let material_map = generate_material_map(materials, images, tileset, &layer.grid_tiles);
 
     for tile in layer.grid_tiles.iter() {
         commands.spawn((
-            Transform::from_xyz(0.0625 * tile.px.x as f32, -0.0625 * tile.px.y as f32, -0.5),
-            Mesh3d(floor.clone()),
+            GridPosition(IVec3::new(
+                tile.px.x / layer.c_hei,
+                -tile.px.y / layer.c_hei,
+                -1,
+            )),
+            Mesh3d(cube_mesh.clone()),
             MeshMaterial3d(
                 material_map
                     .get(&(tile.src.x, tile.src.y))
-                    .unwrap_or(&missing_material)
+                    .unwrap_or(missing_material)
                     .clone(),
             ),
+            RenderLayers::layer(1),
+        ));
+    }
+}
+
+fn spawn_layer_entities(
+    mut commands: Commands,
+    particle_handle: &Res<GradientEffect>,
+    layer: &LayerInstance,
+) {
+    for entity in layer.entity_instances.iter() {
+        commands.spawn((
+            GridPosition(IVec3::new(
+                entity.px.x / layer.c_hei,
+                -entity.px.y / layer.c_hei,
+                0,
+            )),
+            ParticleEffectBundle {
+                effect: ParticleEffect::new(particle_handle.0.clone()),
+                ..Default::default()
+            },
             RenderLayers::layer(1),
         ));
     }

@@ -2,8 +2,7 @@ use bevy::prelude::*;
 
 use super::direction::{Direction, GridDirection};
 
-#[derive(Component, Clone, Copy, Debug, Deref, DerefMut)]
-#[require(GridDirection)]
+#[derive(Component, Clone, Copy, Debug, Default, Deref, DerefMut)]
 pub struct GridPosition(pub IVec3);
 
 impl GridPosition {
@@ -23,24 +22,24 @@ impl GridPosition {
         }
     }
 
-    pub fn forward(&self, dir: &GridDirection) -> IVec3 {
+    pub fn forward(&self, dir: &GridDirection) -> GridPosition {
         let index = Self::direction_vector_offset(dir) % Self::DIRECTION_VECTORS.len();
-        **self + Self::DIRECTION_VECTORS[index]
+        Self(**self + Self::DIRECTION_VECTORS[index])
     }
 
-    pub fn right(&self, dir: &GridDirection) -> IVec3 {
+    pub fn right(&self, dir: &GridDirection) -> GridPosition {
         let index = (1 + Self::direction_vector_offset(dir)) % Self::DIRECTION_VECTORS.len();
-        **self + Self::DIRECTION_VECTORS[index]
+        Self(**self + Self::DIRECTION_VECTORS[index])
     }
 
-    pub fn back(&self, dir: &GridDirection) -> IVec3 {
+    pub fn back(&self, dir: &GridDirection) -> GridPosition {
         let index = (2 + Self::direction_vector_offset(dir)) % Self::DIRECTION_VECTORS.len();
-        **self + Self::DIRECTION_VECTORS[index]
+        Self(**self + Self::DIRECTION_VECTORS[index])
     }
 
-    pub fn left(&self, dir: &GridDirection) -> IVec3 {
+    pub fn left(&self, dir: &GridDirection) -> GridPosition {
         let index = (3 + Self::direction_vector_offset(dir)) % Self::DIRECTION_VECTORS.len();
-        **self + Self::DIRECTION_VECTORS[index]
+        Self(**self + Self::DIRECTION_VECTORS[index])
     }
 }
 
