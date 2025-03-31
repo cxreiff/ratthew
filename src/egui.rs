@@ -27,7 +27,7 @@ struct EguiTerminal(Terminal<RataguiBackend>);
 impl Default for EguiTerminal {
     fn default() -> Self {
         let mut backend = RataguiBackend::new(512, 512);
-        backend.set_font_size(14);
+        backend.set_font_size(12);
         Self(Terminal::new(backend).unwrap())
     }
 }

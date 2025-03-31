@@ -75,6 +75,10 @@ fn setup_camera_system(
             parent.spawn((
                 RenderLayers::layer(1),
                 Camera3d::default(),
+                Projection::from(PerspectiveProjection {
+                    fov: 70.0_f32.to_radians(),
+                    ..default()
+                }),
                 RatatuiCamera::default(),
                 RatatuiCameraStrategy::luminance_misc(),
                 WorldCamera,
