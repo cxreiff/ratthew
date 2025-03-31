@@ -80,7 +80,7 @@ fn setup_camera_system(
                     ..default()
                 }),
                 RatatuiCamera::default(),
-                RatatuiCameraStrategy::luminance_misc(),
+                RatatuiCameraStrategy::luminance_shading(),
                 WorldCamera,
                 Skybox {
                     image: asset_server.load("skybox.ktx2"),

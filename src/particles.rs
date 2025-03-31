@@ -1,4 +1,4 @@
-use bevy::{prelude::*, render::view::RenderLayers};
+use bevy::prelude::*;
 use bevy_hanabi::prelude::*;
 
 pub(super) fn plugin(app: &mut App) {
@@ -10,7 +10,7 @@ pub struct GradientEffect(pub Handle<EffectAsset>);
 
 fn setup(mut commands: Commands, mut effects: ResMut<Assets<EffectAsset>>) {
     let mut gradient = Gradient::new();
-    gradient.add_key(0.0, Vec4::new(1., 0.1, 0.1, 1.0));
+    gradient.add_key(0.0, Vec4::new(0.6, 0.1, 1.0, 1.0));
     gradient.add_key(1.0, Vec4::splat(0.));
 
     let mut module = Module::default();
@@ -35,13 +35,13 @@ fn setup(mut commands: Commands, mut effects: ResMut<Assets<EffectAsset>>) {
         size: Vec3::splat(0.1).into(),
     };
 
-    let lifetime = module.lit(10.);
+    let lifetime = module.lit(4.);
     let init_lifetime = SetAttributeModifier::new(Attribute::LIFETIME, lifetime);
 
     let accel = module.lit(Vec3::new(0., 0., 0.5));
     let update_accel = AccelModifier::new(accel);
 
-    let effect = EffectAsset::new(32768, Spawner::rate(5.0.into()), module)
+    let effect = EffectAsset::new(32768, Spawner::rate(15.0.into()), module)
         .init(init_pos)
         .init(init_vel)
         .init(init_lifetime)
@@ -51,15 +51,6 @@ fn setup(mut commands: Commands, mut effects: ResMut<Assets<EffectAsset>>) {
         .render(ColorOverLifetimeModifier { gradient });
 
     let effect_handle = effects.add(effect);
-
-    commands.spawn((
-        ParticleEffectBundle {
-            effect: ParticleEffect::new(effect_handle.clone()),
-            transform: Transform::from_xyz(3., -8., 0.),
-            ..Default::default()
-        },
-        RenderLayers::layer(1),
-    ));
 
     commands.insert_resource(GradientEffect(effect_handle));
 }
