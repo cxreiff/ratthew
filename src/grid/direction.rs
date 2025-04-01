@@ -37,10 +37,10 @@ pub struct GridDirection(pub Direction);
 impl From<GridDirection> for Quat {
     fn from(value: GridDirection) -> Self {
         match *value {
-            Direction::North => Quat::from_euler(EulerRot::XYZ, PI / 2., 0., 0.),
-            Direction::East => Quat::from_euler(EulerRot::XYZ, PI / 2., 3. * PI / 2., 0.),
-            Direction::South => Quat::from_euler(EulerRot::XYZ, PI / 2., PI, 0.),
-            Direction::West => Quat::from_euler(EulerRot::XYZ, PI / 2., PI / 2., 0.),
+            Direction::North => Quat::from_euler(EulerRot::XYZ, 0., 0., 0.),
+            Direction::East => Quat::from_euler(EulerRot::XYZ, 0., 3. * PI / 2., 0.),
+            Direction::South => Quat::from_euler(EulerRot::XYZ, 0., PI, 0.),
+            Direction::West => Quat::from_euler(EulerRot::XYZ, 0., PI / 2., 0.),
         }
     }
 }

@@ -4,7 +4,6 @@ use bevy::input::common_conditions::input_just_pressed;
 use bevy::log::LogPlugin;
 use bevy::prelude::*;
 use bevy::window::WindowMode;
-// use bevy::window::WindowResolution;
 use bevy::winit::WinitPlugin;
 use bevy_ratatui_camera::RatatuiCameraPlugin;
 use bevy_tween::DefaultTweenPlugins;
@@ -50,7 +49,6 @@ pub fn plugin(app: &mut App) {
         default_plugins = default_plugins.set(WindowPlugin {
             primary_window: Some(Window {
                 mode: WindowMode::BorderlessFullscreen(MonitorSelection::Primary),
-                // resolution: WindowResolution::default().with_scale_factor_override(1.0),
                 ..default()
             }),
             ..default()

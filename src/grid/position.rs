@@ -7,9 +7,9 @@ pub struct GridPosition(pub IVec3);
 
 impl GridPosition {
     const DIRECTION_VECTORS: [IVec3; 4] = [
-        IVec3::new(0, 1, 0),
+        IVec3::new(0, 0, -1),
         IVec3::new(1, 0, 0),
-        IVec3::new(0, -1, 0),
+        IVec3::new(0, 0, 1),
         IVec3::new(-1, 0, 0),
     ];
 

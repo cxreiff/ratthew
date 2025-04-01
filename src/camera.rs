@@ -53,12 +53,10 @@ fn setup_camera_system(
                 ..default()
             },
             Camera3d::default(),
-            Transform::from_translation(Vec3::new(3., -13., 0.))
-                .looking_at(Vec3::new(3., -12., 0.), Vec3::Z),
             RatatuiCamera::default(),
             RatatuiCameraStrategy::luminance_shading(),
             PlayerCamera,
-            GridPosition(IVec3::new(3, -13, 0)),
+            GridPosition(IVec3::new(16, 0, 5)),
             GridDirection(Direction::North),
             GridAnimated,
         ))
@@ -80,7 +78,6 @@ fn setup_camera_system(
                     ..default()
                 }),
                 RatatuiCamera::default(),
-                RatatuiCameraStrategy::luminance_shading(),
                 WorldCamera,
                 Skybox {
                     image: asset_server.load("skybox.ktx2"),

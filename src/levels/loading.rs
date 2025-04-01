@@ -110,8 +110,8 @@ pub fn spawn_layer_walls(
         commands.spawn((
             GridPosition(IVec3::new(
                 tile.px.x / layer.c_hei,
-                -tile.px.y / layer.c_hei,
                 0,
+                tile.px.y / layer.c_hei,
             )),
             Mesh3d(cube_mesh.clone()),
             MeshMaterial3d(
@@ -141,8 +141,8 @@ pub fn spawn_layer_floor(
         commands.spawn((
             GridPosition(IVec3::new(
                 tile.px.x / layer.c_hei,
-                -tile.px.y / layer.c_hei,
                 -1,
+                tile.px.y / layer.c_hei,
             )),
             Mesh3d(cube_mesh.clone()),
             MeshMaterial3d(
@@ -165,8 +165,8 @@ fn spawn_layer_entities(
         commands.spawn((
             GridPosition(IVec3::new(
                 entity.px.x / layer.c_hei,
-                -entity.px.y / layer.c_hei,
                 0,
+                entity.px.y / layer.c_hei,
             )),
             ParticleEffectBundle {
                 effect: ParticleEffect::new(particle_handle.0.clone()),

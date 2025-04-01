@@ -35,10 +35,10 @@ fn setup(mut commands: Commands, mut effects: ResMut<Assets<EffectAsset>>) {
         size: Vec3::splat(0.1).into(),
     };
 
-    let lifetime = module.lit(4.);
+    let lifetime = module.lit(2.);
     let init_lifetime = SetAttributeModifier::new(Attribute::LIFETIME, lifetime);
 
-    let accel = module.lit(Vec3::new(0., 0., 0.5));
+    let accel = module.lit(Vec3::new(0., 0.5, 0.));
     let update_accel = AccelModifier::new(accel);
 
     let effect = EffectAsset::new(32768, Spawner::rate(15.0.into()), module)
