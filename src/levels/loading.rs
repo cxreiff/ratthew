@@ -202,6 +202,8 @@ fn generate_spritesheet_material(
 ) -> Handle<StandardMaterial> {
     materials.add(StandardMaterial {
         reflectance: 0.,
+        perceptual_roughness: 1.0,
+
         base_color_texture: Some(images.add(Image::from_dynamic(
             tileset.crop(tile.src.x as u32, tile.src.y as u32, 16, 16),
             true,

@@ -1,6 +1,5 @@
 use animation::sword_bob_system;
-use bevy::diagnostic::FrameTimeDiagnosticsPlugin;
-use bevy::input::common_conditions::input_just_pressed;
+use bevy::diagnostic::{EntityCountDiagnosticsPlugin, FrameTimeDiagnosticsPlugin};
 use bevy::log::LogPlugin;
 use bevy::prelude::*;
 use bevy::window::WindowMode;
@@ -60,6 +59,7 @@ pub fn plugin(app: &mut App) {
         DefaultTweenPlugins,
         RatatuiCameraPlugin,
         FrameTimeDiagnosticsPlugin,
+        EntityCountDiagnosticsPlugin,
         camera::plugin,
         particles::plugin,
         levels::plugin,
@@ -74,15 +74,26 @@ pub fn plugin(app: &mut App) {
     .add_systems(
         Update,
         (
+            global_input_system,
             sword_bob_system.run_if(in_state(GameStates::Playing)),
-            debug_print_world_system
-                .run_if(in_state(GameStates::Playing))
-                .run_if(input_just_pressed(KeyCode::KeyP)),
         ),
     );
 }
 
-fn debug_print_world_system(world: &World) {
-    let num = world.entities().len();
-    log::info!("{num}");
+pub fn global_input_system(
+    input: Res<ButtonInput<KeyCode>>,
+    mut exit: EventWriter<AppExit>,
+    mut flags: ResMut<Flags>,
+) {
+    for press in input.get_just_pressed() {
+        match press {
+            KeyCode::Escape => {
+                exit.send_default();
+            }
+            KeyCode::Tab => {
+                flags.debug = !flags.debug;
+            }
+            _ => {}
+        }
+    }
 }

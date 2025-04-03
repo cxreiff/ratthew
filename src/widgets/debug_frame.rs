@@ -1,4 +1,6 @@
-use bevy::diagnostic::{DiagnosticsStore, FrameTimeDiagnosticsPlugin};
+use bevy::diagnostic::{
+    DiagnosticsStore, EntityCountDiagnosticsPlugin, FrameTimeDiagnosticsPlugin,
+};
 use bevy_ratatui::kitty::KittyEnabled;
 use ratatui::{
     layout::{Alignment, Constraint, Direction, Layout},
@@ -38,6 +40,13 @@ pub fn debug_frame(
                 "disabled"
             }
         ));
+
+        if let Some(value) = diagnostics
+            .get(&EntityCountDiagnosticsPlugin::ENTITY_COUNT)
+            .and_then(|count| count.value())
+        {
+            block = block.title_top(format!("[entities: {value}]"));
+        }
 
         if let Some(value) = diagnostics
             .get(&FrameTimeDiagnosticsPlugin::FPS)

@@ -1,29 +1,17 @@
-use std::io;
-
 use bevy::{
-    core_pipeline::Skybox,
-    gltf::Gltf,
-    prelude::*,
-    render::view::RenderLayers,
-    utils::{error, HashMap},
+    core_pipeline::Skybox, gltf::Gltf, prelude::*, render::view::RenderLayers, utils::HashMap,
 };
 use bevy_ratatui_camera::{RatatuiCamera, RatatuiCameraStrategy};
 
 use crate::{
     grid::{Direction, GridAnimated, GridDirection, GridPosition},
     levels::loading::GameAssets,
-    Flags, GameStates,
+    GameStates,
 };
 
 pub(crate) fn plugin(app: &mut App) {
     app.init_resource::<KeysDown>()
-        .add_systems(OnEnter(GameStates::Playing), setup_camera_system)
-        .add_systems(
-            Update,
-            move_camera_system
-                .map(error)
-                .run_if(in_state(GameStates::Playing)),
-        );
+        .add_systems(OnEnter(GameStates::Playing), setup_camera_system);
 }
 
 #[derive(Component)]
@@ -54,7 +42,7 @@ fn setup_camera_system(
             },
             Camera3d::default(),
             RatatuiCamera::default(),
-            RatatuiCameraStrategy::luminance_shading(),
+            RatatuiCameraStrategy::luminance_misc(),
             PlayerCamera,
             GridPosition(IVec3::new(16, 0, 5)),
             GridDirection(Direction::North),
@@ -64,7 +52,7 @@ fn setup_camera_system(
             parent.spawn((
                 RenderLayers::layer(0),
                 PointLight {
-                    intensity: 100000.,
+                    intensity: 10000.,
                     shadows_enabled: true,
                     ..default()
                 },
@@ -78,10 +66,11 @@ fn setup_camera_system(
                     ..default()
                 }),
                 RatatuiCamera::default(),
+                RatatuiCameraStrategy::default(),
                 WorldCamera,
                 Skybox {
                     image: asset_server.load("skybox.ktx2"),
-                    brightness: 1000.,
+                    brightness: 200.,
                     ..default()
                 },
             ));
@@ -93,7 +82,7 @@ fn setup_camera_system(
                 sword_transform.rotate_local_z(-0.15);
 
                 parent.spawn((
-                    RenderLayers::layer(1),
+                    RenderLayers::layer(0), // setting this does not set gltf children
                     SceneRoot(gltf.scenes[0].clone()),
                     sword_transform,
                     Sword,
@@ -102,30 +91,10 @@ fn setup_camera_system(
             parent.spawn((
                 RenderLayers::layer(1),
                 PointLight {
-                    intensity: 100000.,
+                    intensity: 75000.,
                     shadows_enabled: true,
                     ..default()
                 },
             ));
         });
-}
-
-pub fn move_camera_system(
-    input: Res<ButtonInput<KeyCode>>,
-    mut exit: EventWriter<AppExit>,
-    mut flags: ResMut<Flags>,
-) -> io::Result<()> {
-    for press in input.get_just_pressed() {
-        match press {
-            KeyCode::Escape => {
-                exit.send_default();
-            }
-            KeyCode::Tab => {
-                flags.debug = !flags.debug;
-            }
-            _ => {}
-        }
-    }
-
-    Ok(())
 }

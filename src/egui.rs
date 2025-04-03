@@ -4,7 +4,7 @@ use bevy::{diagnostic::DiagnosticsStore, prelude::*};
 use bevy_egui::{EguiContexts, EguiPlugin};
 use bevy_ratatui::kitty::KittyEnabled;
 use bevy_ratatui_camera::RatatuiCameraWidget;
-use egui::{CentralPanel, Margin};
+use egui::{CentralPanel, Frame};
 use egui_ratatui::RataguiBackend;
 use ratatui::Terminal;
 
@@ -54,10 +54,11 @@ fn draw_scene_system(
         }
     })?;
 
-    CentralPanel::default().show(egui.ctx_mut(), |ui| {
-        ui.add(ratagui.backend_mut());
-        ui.style_mut().spacing.window_margin = Margin::symmetric(8., 0.)
-    });
+    CentralPanel::default()
+        .frame(Frame::none())
+        .show(egui.ctx_mut(), |ui| {
+            ui.add(ratagui.backend_mut());
+        });
 
     Ok(())
 }
