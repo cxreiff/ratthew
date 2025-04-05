@@ -7,14 +7,15 @@ use bevy_asset_loader::{
 };
 use bevy_ecs_ldtk::{
     assets::{LdtkAssetPlugin, LdtkProject},
-    ldtk::{LayerInstance, TileInstance},
+    ldtk::TileInstance,
+    EntityInstance,
 };
 use bevy_hanabi::{ParticleEffect, ParticleEffectBundle};
 use image::DynamicImage;
 
-use crate::{grid::GridPosition, particles::GradientEffect, GameStates};
+use crate::{grid::GridPosition, levels::layer::LayerData, particles::GradientEffect, GameStates};
 
-use super::cube::UprightCube;
+use super::{cube::UprightCube, layer::LayerVariant};
 
 pub(super) fn plugin(app: &mut App) {
     app.add_plugins(LdtkAssetPlugin)
@@ -24,7 +25,12 @@ pub(super) fn plugin(app: &mut App) {
                 .continue_to_state(GameStates::Playing)
                 .load_collection::<GameAssets>(),
         )
-        .add_systems(OnEnter(GameStates::Playing), level_setup_system);
+        .add_systems(Startup, level_load_setup_system)
+        .add_systems(
+            Update,
+            level_load_system.run_if(in_state(GameStates::Playing)),
+        )
+        .add_observer(level_load_observer);
 }
 
 #[derive(AssetCollection, Resource)]
@@ -37,56 +43,115 @@ pub struct GameAssets {
     pub sword: Handle<Gltf>,
 }
 
-fn level_setup_system(
+#[derive(Event, Debug, Clone)]
+pub struct LdtkLevelLoad;
+
+#[derive(Component, Debug, Clone)]
+pub struct SpawnedFromLdtk;
+
+#[derive(Component, Default, Debug, Clone, Deref, DerefMut)]
+pub struct LdtkTilesetMaterials(HashMap<(i32, i32), Handle<StandardMaterial>>);
+
+#[derive(Resource, Debug, Clone, Deref, DerefMut)]
+pub struct UprightCubeMesh(Handle<Mesh>);
+
+#[derive(Resource, Debug, Clone, Deref, DerefMut)]
+pub struct MissingMaterial(Handle<StandardMaterial>);
+
+fn level_load_setup_system(
     mut commands: Commands,
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
+) {
+    commands.insert_resource(MissingMaterial(
+        materials.add(StandardMaterial::from(Color::srgb(1., 0., 0.))),
+    ));
+
+    commands.insert_resource(UprightCubeMesh(meshes.add(UprightCube)));
+}
+
+fn level_load_system(
+    mut commands: Commands,
     handles: Res<GameAssets>,
-    ldtk_assets: Res<Assets<LdtkProject>>,
+    mut ldtk_asset_events: EventReader<AssetEvent<LdtkProject>>,
+    mut image_asset_events: EventReader<AssetEvent<Image>>,
+) {
+    for event in image_asset_events.read() {
+        if let AssetEvent::Modified { id } = event {
+            if handles.tileset.id() == *id {
+                commands.trigger(LdtkLevelLoad);
+            }
+        }
+    }
+
+    for event in ldtk_asset_events.read() {
+        if let AssetEvent::Modified { .. } | AssetEvent::Added { .. } = event {
+            commands.trigger(LdtkLevelLoad);
+        }
+    }
+}
+
+fn level_load_observer(
+    _trigger: Trigger<LdtkLevelLoad>,
+    mut commands: Commands,
+    mut materials: ResMut<Assets<StandardMaterial>>,
     mut images: ResMut<Assets<Image>>,
+    handles: Res<GameAssets>,
+    spawned_from_ldtk: Query<Entity, With<SpawnedFromLdtk>>,
+    ldtk_material_maps: Query<(Entity, &LdtkTilesetMaterials)>,
+    ldtk_assets: Res<Assets<LdtkProject>>,
     particle_handle: Res<GradientEffect>,
+    upright_cube_mesh: Res<UprightCubeMesh>,
+    missing_material: Res<MissingMaterial>,
 ) {
     let tileset = images.get(&handles.tileset).unwrap();
     let mut tileset = tileset.clone().try_into_dynamic().unwrap();
 
-    let missing_material = materials.add(StandardMaterial::from(Color::srgb(1., 0., 0.)));
-    let cube_mesh = meshes.add(UprightCube);
+    for entity in &spawned_from_ldtk {
+        commands.entity(entity).despawn_recursive();
+    }
+
+    for (entity, material_map) in &ldtk_material_maps {
+        for material in material_map.values() {
+            materials.remove(material);
+        }
+        commands.entity(entity).despawn();
+    }
 
     if let Some(ldtk) = ldtk_assets.get(&handles.level) {
-        if let Some(level) = ldtk.as_standalone().iter_loaded_levels().next() {
+        for level in ldtk.as_standalone().iter_loaded_levels() {
+            let altitude = level.world_depth();
+
             for layer in level.layer_instances().iter() {
-                match layer.layer_instance_type {
-                    bevy_ecs_ldtk::ldtk::Type::AutoLayer => spawn_layer_walls(
-                        &mut commands,
-                        &mut materials,
-                        &mut images,
-                        &mut tileset,
-                        &missing_material,
-                        &cube_mesh,
-                        layer,
-                    ),
-                    bevy_ecs_ldtk::ldtk::Type::Entities => {
-                        spawn_layer_entities(commands.reborrow(), &particle_handle, layer)
+                let Ok(layer_data) = LayerData::try_from(layer) else {
+                    log::info!("FAILED TO PARSE: {}", layer.identifier);
+                    continue;
+                };
+
+                match layer_data.variant {
+                    LayerVariant::Particles(instances) => {
+                        spawn_layer_entities(
+                            commands.reborrow(),
+                            &particle_handle,
+                            *altitude,
+                            layer_data.sprite_size,
+                            &instances,
+                        );
                     }
-                    bevy_ecs_ldtk::ldtk::Type::IntGrid => spawn_layer_walls(
-                        &mut commands,
-                        &mut materials,
-                        &mut images,
-                        &mut tileset,
-                        &missing_material,
-                        &cube_mesh,
-                        layer,
-                    ),
-                    bevy_ecs_ldtk::ldtk::Type::Tiles => spawn_layer_floor(
-                        &mut commands,
-                        &mut materials,
-                        &mut images,
-                        &mut tileset,
-                        &missing_material,
-                        &cube_mesh,
-                        layer,
-                    ),
-                }
+                    LayerVariant::Walls(instances) => {
+                        spawn_layer_walls(
+                            &mut commands,
+                            &mut materials,
+                            &mut images,
+                            &mut tileset,
+                            &missing_material,
+                            &upright_cube_mesh,
+                            *altitude,
+                            layer_data.sprite_size,
+                            &instances,
+                        );
+                    }
+                };
             }
         }
     }
@@ -102,16 +167,19 @@ pub fn spawn_layer_walls(
     tileset: &mut DynamicImage,
     missing_material: &Handle<StandardMaterial>,
     cube_mesh: &Handle<Mesh>,
-    layer: &LayerInstance,
+    altitude: i32,
+    sprite_size: IVec2,
+    instances: &Vec<TileInstance>,
 ) {
-    let material_map = generate_material_map(materials, images, tileset, &layer.auto_layer_tiles);
+    let material_map = generate_ldtk_material_map(materials, images, tileset, instances);
 
-    for tile in layer.auto_layer_tiles.iter() {
+    for tile in instances.iter() {
         commands.spawn((
+            SpawnedFromLdtk,
             GridPosition(IVec3::new(
-                tile.px.x / layer.c_hei,
-                0,
-                tile.px.y / layer.c_hei,
+                tile.px.x / sprite_size.y,
+                altitude,
+                tile.px.y / sprite_size.y,
             )),
             Mesh3d(cube_mesh.clone()),
             MeshMaterial3d(
@@ -124,49 +192,24 @@ pub fn spawn_layer_walls(
             Collider,
         ));
     }
-}
 
-pub fn spawn_layer_floor(
-    commands: &mut Commands,
-    materials: &mut ResMut<Assets<StandardMaterial>>,
-    images: &mut ResMut<Assets<Image>>,
-    tileset: &mut DynamicImage,
-    missing_material: &Handle<StandardMaterial>,
-    cube_mesh: &Handle<Mesh>,
-    layer: &LayerInstance,
-) {
-    let material_map = generate_material_map(materials, images, tileset, &layer.grid_tiles);
-
-    for tile in layer.grid_tiles.iter() {
-        commands.spawn((
-            GridPosition(IVec3::new(
-                tile.px.x / layer.c_hei,
-                -1,
-                tile.px.y / layer.c_hei,
-            )),
-            Mesh3d(cube_mesh.clone()),
-            MeshMaterial3d(
-                material_map
-                    .get(&(tile.src.x, tile.src.y))
-                    .unwrap_or(missing_material)
-                    .clone(),
-            ),
-            RenderLayers::layer(1),
-        ));
-    }
+    commands.spawn(material_map);
 }
 
 fn spawn_layer_entities(
     mut commands: Commands,
     particle_handle: &Res<GradientEffect>,
-    layer: &LayerInstance,
+    altitude: i32,
+    sprite_size: IVec2,
+    instances: &[EntityInstance],
 ) {
-    for entity in layer.entity_instances.iter() {
+    for entity in instances.iter() {
         commands.spawn((
+            SpawnedFromLdtk,
             GridPosition(IVec3::new(
-                entity.px.x / layer.c_hei,
-                0,
-                entity.px.y / layer.c_hei,
+                entity.px.x / sprite_size.y,
+                altitude,
+                entity.px.y / sprite_size.y,
             )),
             ParticleEffectBundle {
                 effect: ParticleEffect::new(particle_handle.0.clone()),
@@ -177,21 +220,21 @@ fn spawn_layer_entities(
     }
 }
 
-fn generate_material_map(
+fn generate_ldtk_material_map(
     materials: &mut ResMut<Assets<StandardMaterial>>,
     images: &mut ResMut<Assets<Image>>,
     tileset: &mut DynamicImage,
     tiles: &Vec<TileInstance>,
-) -> HashMap<(i32, i32), Handle<StandardMaterial>> {
-    let mut material_map = HashMap::new();
+) -> LdtkTilesetMaterials {
+    let mut ldtk_material_map = LdtkTilesetMaterials::default();
     for tile in tiles {
-        if material_map.get(&(tile.src.x, tile.src.y)).is_none() {
+        if ldtk_material_map.get(&(tile.src.x, tile.src.y)).is_none() {
             let material_handle = generate_spritesheet_material(materials, images, tileset, tile);
-            material_map.insert((tile.src.x, tile.src.y), material_handle.clone());
+            ldtk_material_map.insert((tile.src.x, tile.src.y), material_handle.clone());
         }
     }
 
-    material_map
+    ldtk_material_map
 }
 
 fn generate_spritesheet_material(

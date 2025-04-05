@@ -1,7 +1,7 @@
 use bevy::{
     core_pipeline::Skybox, gltf::Gltf, prelude::*, render::view::RenderLayers, utils::HashMap,
 };
-use bevy_ratatui_camera::{RatatuiCamera, RatatuiCameraStrategy};
+use bevy_ratatui_camera::{LuminanceConfig, RatatuiCamera, RatatuiCameraStrategy};
 
 use crate::{
     grid::{Direction, GridAnimated, GridDirection, GridPosition},
@@ -42,9 +42,13 @@ fn setup_camera_system(
             },
             Camera3d::default(),
             RatatuiCamera::default(),
-            RatatuiCameraStrategy::luminance_misc(),
+            RatatuiCameraStrategy::Luminance(LuminanceConfig {
+                luminance_characters: LuminanceConfig::LUMINANCE_CHARACTERS_MISC.into(),
+                bg_color_scale: 0.3,
+                ..default()
+            }),
             PlayerCamera,
-            GridPosition(IVec3::new(16, 0, 5)),
+            GridPosition(IVec3::new(10, 1, 5)),
             GridDirection(Direction::North),
             GridAnimated,
         ))
@@ -66,7 +70,6 @@ fn setup_camera_system(
                     ..default()
                 }),
                 RatatuiCamera::default(),
-                RatatuiCameraStrategy::default(),
                 WorldCamera,
                 Skybox {
                     image: asset_server.load("skybox.ktx2"),

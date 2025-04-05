@@ -32,3 +32,4 @@ egui = ["dep:bevy_egui", "dep:egui", "dep:egui_ratatui"]
 
 [lints.clippy]
 type_complexity = "allow"
+too_many_arguments = "allow"

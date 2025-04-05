@@ -1,7 +1,7 @@
 use bevy::prelude::*;
 
-// mod collisions;
 mod cube;
+mod layer;
 pub mod loading;
 
 pub(super) fn plugin(app: &mut App) {
