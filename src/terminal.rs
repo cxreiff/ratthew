@@ -17,6 +17,7 @@ use bevy_ratatui_camera::RatatuiCameraWidget;
 use crossterm::event::KeyEventKind;
 
 use crate::camera::{PlayerCamera, WorldCamera};
+use crate::grid::GridPosition;
 use crate::widgets::debug_frame::debug_frame;
 use crate::Flags;
 use crate::GameStates;
@@ -48,12 +49,20 @@ fn draw_scene_system(
     mut ratatui: ResMut<RatatuiContext>,
     player_widget: Query<&RatatuiCameraWidget, With<PlayerCamera>>,
     world_widget: Query<&RatatuiCameraWidget, With<WorldCamera>>,
+    player_position: Query<&GridPosition, With<PlayerCamera>>,
     flags: Res<Flags>,
     diagnostics: Res<DiagnosticsStore>,
     kitty_enabled: Option<Res<KittyEnabled>>,
 ) -> io::Result<()> {
     ratatui.draw(|frame| {
-        let area = debug_frame(frame, &flags, &diagnostics, kitty_enabled.as_deref());
+        let area = debug_frame(
+            frame,
+            &flags,
+            &diagnostics,
+            kitty_enabled.as_deref(),
+            player_position.get_single().ok(),
+            true,
+        );
 
         if let Ok(w) = world_widget.get_single() {
             w.render_autoresize(area, frame.buffer_mut(), &mut commands);

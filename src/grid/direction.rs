@@ -11,7 +11,7 @@ pub(super) fn plugin(app: &mut App) {
     );
 }
 
-#[derive(Component, Clone, Copy, Debug, Default)]
+#[derive(Component, Clone, Copy, Debug, Default, PartialEq, Eq)]
 pub enum Direction {
     #[default]
     North,
@@ -40,7 +40,7 @@ impl Direction {
     }
 }
 
-#[derive(Component, Clone, Copy, Debug, Default, Deref, DerefMut)]
+#[derive(Component, Clone, Copy, Debug, Default, PartialEq, Eq, Deref, DerefMut)]
 pub struct GridDirection(pub Direction);
 
 impl From<GridDirection> for Quat {

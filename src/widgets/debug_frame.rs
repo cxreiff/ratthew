@@ -10,13 +10,15 @@ use ratatui::{
 };
 use tui_logger::TuiLoggerWidget;
 
-use crate::Flags;
+use crate::{grid::GridPosition, Flags};
 
 pub fn debug_frame(
     frame: &mut Frame,
     flags: &Flags,
     diagnostics: &DiagnosticsStore,
     kitty_enabled: Option<&KittyEnabled>,
+    player_position: Option<&GridPosition>,
+    show_log_panel: bool,
 ) -> ratatui::layout::Rect {
     let mut block = Block::bordered()
         .bg(ratatui::style::Color::Rgb(0, 0, 0))
@@ -28,7 +30,11 @@ pub fn debug_frame(
     if flags.debug {
         let layout = Layout::new(
             Direction::Vertical,
-            [Constraint::Percentage(66), Constraint::Fill(1)],
+            if show_log_panel {
+                &[Constraint::Percentage(66), Constraint::Fill(1)]
+            } else {
+                &[Constraint::Percentage(100)] as &[Constraint]
+            },
         )
         .split(frame.area());
 
@@ -55,14 +61,24 @@ pub fn debug_frame(
             block = block.title_top(format!("[fps: {value:.0}]"));
         }
 
+        if let Some(position) = player_position {
+            block = block.title_top(format!(
+                "[xyz: {}, {}, {}]",
+                position.x, position.y, position.z
+            ));
+        }
+
         let inner = block.inner(layout[0]);
         frame.render_widget(block, layout[0]);
-        frame.render_widget(
-            TuiLoggerWidget::default()
-                .block(Block::bordered())
-                .style(Style::default().bg(ratatui::style::Color::Reset)),
-            layout[1],
-        );
+
+        if show_log_panel {
+            frame.render_widget(
+                TuiLoggerWidget::default()
+                    .block(Block::bordered())
+                    .style(Style::default().bg(ratatui::style::Color::Reset)),
+                layout[1],
+            );
+        }
 
         inner
     } else {

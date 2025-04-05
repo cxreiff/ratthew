@@ -13,9 +13,14 @@ use bevy_ecs_ldtk::{
 use bevy_hanabi::{ParticleEffect, ParticleEffectBundle};
 use image::DynamicImage;
 
-use crate::{grid::GridPosition, levels::layer::LayerData, particles::GradientEffect, GameStates};
+use crate::{
+    grid::{GridDirection, GridPosition},
+    levels::layer::LayerData,
+    particles::GradientEffect,
+    GameStates,
+};
 
-use super::{cube::UprightCube, layer::LayerVariant};
+use super::{layer::LayerVariant, ramp::UprightRamp, upright_cube::UprightCube};
 
 pub(super) fn plugin(app: &mut App) {
     app.add_plugins(LdtkAssetPlugin)
@@ -26,6 +31,7 @@ pub(super) fn plugin(app: &mut App) {
                 .load_collection::<GameAssets>(),
         )
         .add_systems(Startup, level_load_setup_system)
+        .add_systems(OnEnter(GameStates::Playing), initial_load_system)
         .add_systems(
             Update,
             level_load_system.run_if(in_state(GameStates::Playing)),
@@ -56,18 +62,32 @@ pub struct LdtkTilesetMaterials(HashMap<(i32, i32), Handle<StandardMaterial>>);
 pub struct UprightCubeMesh(Handle<Mesh>);
 
 #[derive(Resource, Debug, Clone, Deref, DerefMut)]
+pub struct RampMesh(Handle<Mesh>);
+
+#[derive(Resource, Debug, Clone, Deref, DerefMut)]
 pub struct MissingMaterial(Handle<StandardMaterial>);
+
+#[derive(Component, Debug, Clone)]
+pub struct Wall;
+
+#[derive(Component, Debug, Clone)]
+#[require(GridDirection)]
+pub struct Ramp;
 
 fn level_load_setup_system(
     mut commands: Commands,
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
 ) {
+    commands.insert_resource(UprightCubeMesh(meshes.add(UprightCube)));
+    commands.insert_resource(RampMesh(meshes.add(UprightRamp)));
     commands.insert_resource(MissingMaterial(
         materials.add(StandardMaterial::from(Color::srgb(1., 0., 0.))),
     ));
+}
 
-    commands.insert_resource(UprightCubeMesh(meshes.add(UprightCube)));
+fn initial_load_system(mut commands: Commands) {
+    commands.trigger(LdtkLevelLoad);
 }
 
 fn level_load_system(
@@ -102,6 +122,7 @@ fn level_load_observer(
     ldtk_assets: Res<Assets<LdtkProject>>,
     particle_handle: Res<GradientEffect>,
     upright_cube_mesh: Res<UprightCubeMesh>,
+    ramp_mesh: Res<RampMesh>,
     missing_material: Res<MissingMaterial>,
 ) {
     let tileset = images.get(&handles.tileset).unwrap();
@@ -149,6 +170,21 @@ fn level_load_observer(
                             *altitude,
                             layer_data.sprite_size,
                             &instances,
+                            Wall,
+                        );
+                    }
+                    LayerVariant::Ramps(instances) => {
+                        spawn_layer_walls(
+                            &mut commands,
+                            &mut materials,
+                            &mut images,
+                            &mut tileset,
+                            &missing_material,
+                            &ramp_mesh,
+                            *altitude,
+                            layer_data.sprite_size,
+                            &instances,
+                            Ramp,
                         );
                     }
                 };
@@ -157,10 +193,7 @@ fn level_load_observer(
     }
 }
 
-#[derive(Component)]
-pub struct Collider;
-
-pub fn spawn_layer_walls(
+pub fn spawn_layer_walls<T>(
     commands: &mut Commands,
     materials: &mut ResMut<Assets<StandardMaterial>>,
     images: &mut ResMut<Assets<Image>>,
@@ -170,27 +203,31 @@ pub fn spawn_layer_walls(
     altitude: i32,
     sprite_size: IVec2,
     instances: &Vec<TileInstance>,
-) {
+    markers: T,
+) where
+    T: Clone + Bundle,
+{
     let material_map = generate_ldtk_material_map(materials, images, tileset, instances);
 
     for tile in instances.iter() {
-        commands.spawn((
-            SpawnedFromLdtk,
-            GridPosition(IVec3::new(
-                tile.px.x / sprite_size.y,
-                altitude,
-                tile.px.y / sprite_size.y,
-            )),
-            Mesh3d(cube_mesh.clone()),
-            MeshMaterial3d(
-                material_map
-                    .get(&(tile.src.x, tile.src.y))
-                    .unwrap_or(missing_material)
-                    .clone(),
-            ),
-            RenderLayers::layer(1),
-            Collider,
-        ));
+        commands
+            .spawn((
+                SpawnedFromLdtk,
+                GridPosition(IVec3::new(
+                    tile.px.x / sprite_size.y,
+                    altitude,
+                    tile.px.y / sprite_size.y,
+                )),
+                Mesh3d(cube_mesh.clone()),
+                MeshMaterial3d(
+                    material_map
+                        .get(&(tile.src.x, tile.src.y))
+                        .unwrap_or(missing_material)
+                        .clone(),
+                ),
+                RenderLayers::layer(1),
+            ))
+            .insert(markers.clone());
     }
 
     commands.spawn(material_map);

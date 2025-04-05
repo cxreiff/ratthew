@@ -1,5 +1,7 @@
 use bevy::prelude::*;
 
+use crate::levels::Ramp;
+
 use super::{
     direction::{Direction, GridDirection},
     GridAnimated, GridSystemSet,
@@ -14,6 +16,9 @@ pub(super) fn plugin(app: &mut App) {
 
 #[derive(Component, Clone, Copy, Debug, Default, Deref, DerefMut)]
 pub struct GridPosition(pub IVec3);
+
+#[derive(Component, Clone, Copy, Debug, Default)]
+pub struct GridAmbulatory;
 
 impl GridPosition {
     const DIRECTION_VECTORS: [IVec3; 4] = [
@@ -50,6 +55,14 @@ impl GridPosition {
     pub fn left(&self, dir: &GridDirection) -> GridPosition {
         let index = (3 + Self::direction_vector_offset(dir)) % Self::DIRECTION_VECTORS.len();
         Self(**self + Self::DIRECTION_VECTORS[index])
+    }
+
+    pub fn up(&self) -> GridPosition {
+        Self(**self + IVec3::new(0, 1, 0))
+    }
+
+    pub fn down(&self) -> GridPosition {
+        Self(**self + IVec3::new(0, -1, 0))
     }
 }
 
@@ -92,11 +105,34 @@ fn grid_movement_observer(
 
 fn grid_static_position_movement_system(
     mut grid_position_changed: Query<
-        (&GridPosition, &mut Transform),
+        (&GridPosition, &mut Transform, Option<&GridAmbulatory>),
         (Changed<GridPosition>, Without<GridAnimated>),
     >,
+    ramps: Query<&GridPosition, With<Ramp>>,
 ) {
-    for (position, mut transform) in &mut grid_position_changed {
+    for (position, mut transform, ambulatory) in &mut grid_position_changed {
         transform.translation = position.into();
+
+        if ambulatory.is_some() && find_ramp(position, &ramps).is_some() {
+            transform.translation.y += 0.5;
+        }
     }
+}
+
+pub fn find_ramp<'a>(
+    position: &GridPosition,
+    ramps: &'a Query<&GridPosition, With<Ramp>>,
+) -> Option<&'a GridPosition> {
+    ramps
+        .iter()
+        .find(|ramp_position| position.eq(ramp_position))
+}
+
+pub fn find_ramp_position_direction<'a>(
+    position: &GridPosition,
+    ramps: &'a Query<(&GridPosition, &GridDirection), With<Ramp>>,
+) -> Option<(&'a GridPosition, &'a GridDirection)> {
+    ramps
+        .iter()
+        .find(|(ramp_position, _)| position.eq(ramp_position))
 }

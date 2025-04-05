@@ -10,6 +10,7 @@ use ratatui::Terminal;
 
 use crate::{
     camera::{PlayerCamera, WorldCamera},
+    grid::GridPosition,
     widgets::debug_frame::debug_frame,
     Flags,
 };
@@ -39,12 +40,20 @@ fn draw_scene_system(
     mut egui: EguiContexts,
     player_widget: Query<&RatatuiCameraWidget, With<PlayerCamera>>,
     world_widget: Query<&RatatuiCameraWidget, With<WorldCamera>>,
+    player_position: Query<&GridPosition, With<PlayerCamera>>,
     flags: Res<Flags>,
     diagnostics: Res<DiagnosticsStore>,
     kitty_enabled: Option<Res<KittyEnabled>>,
 ) -> io::Result<()> {
     ratagui.draw(|frame| {
-        let area = debug_frame(frame, &flags, &diagnostics, kitty_enabled.as_deref());
+        let area = debug_frame(
+            frame,
+            &flags,
+            &diagnostics,
+            kitty_enabled.as_deref(),
+            player_position.get_single().ok(),
+            false,
+        );
 
         if let Ok(w) = world_widget.get_single() {
             w.render_autoresize(area, frame.buffer_mut(), &mut commands);

@@ -7,7 +7,7 @@ mod position;
 
 pub use animation::GridAnimated;
 pub use direction::{Direction, GridDirection};
-pub use position::GridPosition;
+pub use position::{GridAmbulatory, GridPosition};
 
 use crate::GameStates;
 
