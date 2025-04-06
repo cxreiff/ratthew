@@ -7,10 +7,11 @@ use bevy_tween::{
 };
 use interpolate::{rotation, translation};
 
-use crate::levels::Ramp;
+use crate::levels::RampBlock;
 
 use super::{
-    position::{find_ramp, find_ramp_position_direction, GridAmbulatory},
+    position::GridAmbulatory,
+    utilities::{find_ramp_position, find_ramp_position_direction},
     GridDirection, GridPosition, GridSystemSet,
 };
 
@@ -56,7 +57,7 @@ fn grid_movement_blocked_observer(
     trigger: Trigger<GridMoveBlocked>,
     mut commands: Commands,
     grid_positions: Query<(&Transform, &GridPosition, Option<&GridAmbulatory>)>,
-    ramps: Query<(&GridPosition, &GridDirection), With<Ramp>>,
+    ramps: Query<(&GridPosition, &GridDirection), With<RampBlock>>,
 ) {
     let target = trigger.entity().into_target();
     let (transform, grid_position, ambulatory) = grid_positions.get(trigger.entity()).unwrap();
@@ -126,7 +127,7 @@ fn grid_animated_movement_system(
             With<GridAnimated>,
         ),
     >,
-    ramps: Query<&GridPosition, With<Ramp>>,
+    ramps: Query<&GridPosition, With<RampBlock>>,
     block_animations: Query<&GridMoveBlockedParent>,
     mut cleanup_event: EventWriter<GridTweenCleanup>,
 ) {
@@ -141,7 +142,7 @@ fn grid_animated_movement_system(
 
         let mut target_translation = Vec3::from(position);
 
-        if ambulatory.is_some() && find_ramp(position, &ramps).is_some() {
+        if ambulatory.is_some() && find_ramp_position(position, &ramps).is_some() {
             target_translation.y += 0.5;
         }
 

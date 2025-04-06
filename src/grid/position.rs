@@ -1,18 +1,6 @@
 use bevy::prelude::*;
 
-use crate::levels::Ramp;
-
-use super::{
-    direction::{Direction, GridDirection},
-    GridAnimated, GridSystemSet,
-};
-
-pub(super) fn plugin(app: &mut App) {
-    app.add_observer(grid_position_setup_observer).add_systems(
-        Update,
-        grid_static_position_movement_system.in_set(GridSystemSet::Movement),
-    );
-}
+use super::direction::{Direction, GridDirection};
 
 #[derive(Component, Clone, Copy, Debug, Default, Deref, DerefMut)]
 pub struct GridPosition(pub IVec3);
@@ -64,6 +52,29 @@ impl GridPosition {
     pub fn down(&self) -> GridPosition {
         Self(**self + IVec3::new(0, -1, 0))
     }
+
+    pub fn edge_heights(
+        &self,
+        edge_direction: GridDirection,
+        ramp_direction: Option<GridDirection>,
+    ) -> (i32, i32) {
+        if let Some(ramp_direction) = ramp_direction {
+            let edge_direction_index = Self::direction_vector_offset(&edge_direction);
+            let ramp_direction_index = Self::direction_vector_offset(&ramp_direction);
+
+            let offset = match (edge_direction_index - ramp_direction_index).rem_euclid(4) {
+                0 => (1, 1),
+                3 => (0, 1),
+                2 => (0, 0),
+                1 => (1, 0),
+                _ => unreachable!(),
+            };
+
+            (self.y + offset.0, self.y + offset.1)
+        } else {
+            (self.y, self.y)
+        }
+    }
 }
 
 impl From<GridPosition> for Vec3 {
@@ -76,63 +87,4 @@ impl From<&GridPosition> for Vec3 {
     fn from(value: &GridPosition) -> Self {
         Vec3::from(*value)
     }
-}
-
-#[derive(Event, Default, Debug, Clone)]
-pub struct GridPositionMove(pub GridPosition);
-
-fn grid_position_setup_observer(
-    trigger: Trigger<OnAdd, GridPosition>,
-    mut commands: Commands,
-    mut positioned: Query<(&GridPosition, &mut Transform)>,
-) {
-    let (position, mut transform) = positioned.get_mut(trigger.entity()).unwrap();
-    transform.translation = position.into();
-
-    commands
-        .entity(trigger.entity())
-        .observe(grid_movement_observer);
-}
-
-fn grid_movement_observer(
-    trigger: Trigger<GridPositionMove>,
-    mut grid_position: Query<&mut GridPosition>,
-) {
-    if let Ok(mut grid_position) = grid_position.get_mut(trigger.entity()) {
-        *grid_position = trigger.0;
-    }
-}
-
-fn grid_static_position_movement_system(
-    mut grid_position_changed: Query<
-        (&GridPosition, &mut Transform, Option<&GridAmbulatory>),
-        (Changed<GridPosition>, Without<GridAnimated>),
-    >,
-    ramps: Query<&GridPosition, With<Ramp>>,
-) {
-    for (position, mut transform, ambulatory) in &mut grid_position_changed {
-        transform.translation = position.into();
-
-        if ambulatory.is_some() && find_ramp(position, &ramps).is_some() {
-            transform.translation.y += 0.5;
-        }
-    }
-}
-
-pub fn find_ramp<'a>(
-    position: &GridPosition,
-    ramps: &'a Query<&GridPosition, With<Ramp>>,
-) -> Option<&'a GridPosition> {
-    ramps
-        .iter()
-        .find(|ramp_position| position.eq(ramp_position))
-}
-
-pub fn find_ramp_position_direction<'a>(
-    position: &GridPosition,
-    ramps: &'a Query<(&GridPosition, &GridDirection), With<Ramp>>,
-) -> Option<(&'a GridPosition, &'a GridDirection)> {
-    ramps
-        .iter()
-        .find(|(ramp_position, _)| position.eq(ramp_position))
 }

@@ -68,11 +68,11 @@ pub struct RampMesh(Handle<Mesh>);
 pub struct MissingMaterial(Handle<StandardMaterial>);
 
 #[derive(Component, Debug, Clone)]
-pub struct Wall;
+pub struct WallBlock;
 
 #[derive(Component, Debug, Clone)]
 #[require(GridDirection)]
-pub struct Ramp;
+pub struct RampBlock;
 
 fn level_load_setup_system(
     mut commands: Commands,
@@ -170,7 +170,7 @@ fn level_load_observer(
                             *altitude,
                             layer_data.sprite_size,
                             &instances,
-                            Wall,
+                            WallBlock,
                         );
                     }
                     LayerVariant::Ramps(instances) => {
@@ -184,7 +184,7 @@ fn level_load_observer(
                             *altitude,
                             layer_data.sprite_size,
                             &instances,
-                            Ramp,
+                            RampBlock,
                         );
                     }
                 };

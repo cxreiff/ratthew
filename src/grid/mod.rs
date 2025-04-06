@@ -3,7 +3,9 @@ use bevy::prelude::*;
 mod animation;
 mod direction;
 mod input;
+mod movement;
 mod position;
+mod utilities;
 
 pub use animation::GridAnimated;
 pub use direction::{Direction, GridDirection};
@@ -29,10 +31,5 @@ pub(super) fn plugin(app: &mut App) {
             .chain()
             .run_if(in_state(GameStates::Playing)),
     )
-    .add_plugins((
-        animation::plugin,
-        direction::plugin,
-        input::plugin,
-        position::plugin,
-    ));
+    .add_plugins((animation::plugin, input::plugin, movement::plugin));
 }
