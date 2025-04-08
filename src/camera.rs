@@ -48,8 +48,8 @@ fn setup_camera_system(
                 ..default()
             }),
             PlayerCamera,
-            GridPosition(IVec3::new(4, 1, 11)),
-            GridDirection(Direction::North),
+            GridPosition(IVec3::new(12, 1, 6)),
+            GridDirection(Direction::South),
             GridAnimated,
             GridAmbulatory,
         ))

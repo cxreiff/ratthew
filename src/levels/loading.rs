@@ -1,3 +1,5 @@
+use std::ops::Deref;
+
 use bevy::{
     asset::RenderAssetUsages, gltf::Gltf, prelude::*, render::view::RenderLayers, utils::HashMap,
 };
@@ -7,14 +9,15 @@ use bevy_asset_loader::{
 };
 use bevy_ecs_ldtk::{
     assets::{LdtkAssetPlugin, LdtkProject},
-    ldtk::TileInstance,
+    ldtk::{TileInstance, TilesetRectangle},
+    prelude::LdtkFields,
     EntityInstance,
 };
 use bevy_hanabi::{ParticleEffect, ParticleEffectBundle};
 use image::DynamicImage;
 
 use crate::{
-    grid::{GridDirection, GridPosition},
+    grid::{Direction, GridDirection, GridPosition},
     levels::layer::LayerData,
     particles::GradientEffect,
     GameStates,
@@ -174,17 +177,16 @@ fn level_load_observer(
                         );
                     }
                     LayerVariant::Ramps(instances) => {
-                        spawn_layer_walls(
-                            &mut commands,
+                        spawn_layer_ramps(
+                            commands.reborrow(),
                             &mut materials,
                             &mut images,
                             &mut tileset,
                             &missing_material,
-                            &ramp_mesh,
                             *altitude,
                             layer_data.sprite_size,
                             &instances,
-                            RampBlock,
+                            &ramp_mesh,
                         );
                     }
                 };
@@ -257,6 +259,53 @@ fn spawn_layer_entities(
     }
 }
 
+fn spawn_layer_ramps(
+    mut commands: Commands,
+    materials: &mut ResMut<Assets<StandardMaterial>>,
+    images: &mut ResMut<Assets<Image>>,
+    tileset: &mut DynamicImage,
+    missing_material: &Handle<StandardMaterial>,
+    altitude: i32,
+    sprite_size: IVec2,
+    instances: &[EntityInstance],
+    ramp_mesh: &RampMesh,
+) {
+    let material_map = generate_ldtk_entity_material_map(materials, images, tileset, instances);
+
+    for entity in instances.iter() {
+        let Some(tile) = entity.tile else {
+            continue;
+        };
+
+        let direction = match entity.get_enum_field("Direction").unwrap().deref() {
+            "North" => Direction::North,
+            "East" => Direction::East,
+            "South" => Direction::South,
+            "West" => Direction::West,
+            _ => unreachable!(),
+        };
+
+        commands.spawn((
+            SpawnedFromLdtk,
+            GridPosition(IVec3::new(
+                entity.px.x / sprite_size.y,
+                altitude,
+                entity.px.y / sprite_size.y,
+            )),
+            GridDirection(direction),
+            Mesh3d(ramp_mesh.0.clone()),
+            MeshMaterial3d(
+                material_map
+                    .get(&(tile.x, tile.y))
+                    .unwrap_or(missing_material)
+                    .clone(),
+            ),
+            RenderLayers::layer(1),
+            RampBlock,
+        ));
+    }
+}
+
 fn generate_ldtk_material_map(
     materials: &mut ResMut<Assets<StandardMaterial>>,
     images: &mut ResMut<Assets<Image>>,
@@ -286,6 +335,45 @@ fn generate_spritesheet_material(
 
         base_color_texture: Some(images.add(Image::from_dynamic(
             tileset.crop(tile.src.x as u32, tile.src.y as u32, 16, 16),
+            true,
+            RenderAssetUsages::RENDER_WORLD,
+        ))),
+        ..Default::default()
+    })
+}
+
+fn generate_ldtk_entity_material_map(
+    materials: &mut ResMut<Assets<StandardMaterial>>,
+    images: &mut ResMut<Assets<Image>>,
+    tileset: &mut DynamicImage,
+    entities: &[EntityInstance],
+) -> LdtkTilesetMaterials {
+    let mut ldtk_material_map = LdtkTilesetMaterials::default();
+    for entity in entities {
+        if let Some(tile) = entity.tile {
+            if ldtk_material_map.get(&(tile.x, tile.y)).is_none() {
+                let material_handle =
+                    generate_spritesheet_material_entity(materials, images, tileset, &tile);
+                ldtk_material_map.insert((tile.x, tile.y), material_handle.clone());
+            }
+        }
+    }
+
+    ldtk_material_map
+}
+
+fn generate_spritesheet_material_entity(
+    materials: &mut ResMut<Assets<StandardMaterial>>,
+    images: &mut ResMut<Assets<Image>>,
+    tileset: &mut DynamicImage,
+    tile: &TilesetRectangle,
+) -> Handle<StandardMaterial> {
+    materials.add(StandardMaterial {
+        reflectance: 0.,
+        perceptual_roughness: 1.0,
+
+        base_color_texture: Some(images.add(Image::from_dynamic(
+            tileset.crop(tile.x as u32, tile.y as u32, 16, 16),
             true,
             RenderAssetUsages::RENDER_WORLD,
         ))),

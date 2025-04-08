@@ -4,6 +4,7 @@ use bevy_tween::{
     prelude::*,
     tween::AnimationTarget,
     tween_event::TweenEventPlugin,
+    TweenSystemSet,
 };
 use interpolate::{rotation, translation};
 
@@ -12,7 +13,7 @@ use crate::levels::RampBlock;
 use super::{
     position::GridAmbulatory,
     utilities::{find_ramp_position, find_ramp_position_direction},
-    GridDirection, GridPosition, GridSystemSet,
+    Direction, GridDirection, GridPosition, GridSystemSet,
 };
 
 pub(super) fn plugin(app: &mut App) {
@@ -20,11 +21,13 @@ pub(super) fn plugin(app: &mut App) {
         .add_event::<GridTweenCleanup>()
         .add_observer(grid_animated_setup_observer)
         .add_systems(
-            Update,
+            PostUpdate,
             (
                 grid_animated_movement_system.in_set(GridSystemSet::Movement),
                 grid_tween_cleanup_handler.in_set(GridSystemSet::Cleanup),
-            ),
+                ramp_height_correction_system.after(TweenSystemSet::ApplyTween),
+            )
+                .chain(),
         );
 }
 
@@ -34,6 +37,9 @@ pub struct GridAnimated;
 
 #[derive(Event, Default, Debug, Clone)]
 pub struct GridMoveBlocked(pub GridPosition);
+
+#[derive(Component, Default, Debug, Clone)]
+pub struct GridMoveParent;
 
 #[derive(Component, Default, Debug, Clone)]
 pub struct GridMoveBlockedParent;
@@ -128,7 +134,7 @@ fn grid_animated_movement_system(
         ),
     >,
     ramps: Query<&GridPosition, With<RampBlock>>,
-    block_animations: Query<&GridMoveBlockedParent>,
+    block_animations: Query<Entity, Or<(With<GridMoveParent>, With<GridMoveBlockedParent>)>>,
     mut cleanup_event: EventWriter<GridTweenCleanup>,
 ) {
     for (entity, position, direction, transform, children, ambulatory) in &grid_position_changed {
@@ -146,14 +152,45 @@ fn grid_animated_movement_system(
             target_translation.y += 0.5;
         }
 
-        commands.entity(entity).animation().insert_tween_here(
-            Duration::from_millis(500),
-            EaseKind::ExponentialOut,
-            (
-                target.with(translation(transform.translation, target_translation)),
-                target.with(rotation(transform.rotation, direction.into())),
-            ),
-        );
+        commands.entity(entity).with_children(|children| {
+            let mut tween_parent = children.spawn(GridMoveParent);
+            let tween_parent_id = tween_parent.id();
+            tween_parent.animation().insert(sequence((
+                tween(
+                    Duration::from_millis(500),
+                    EaseKind::ExponentialOut,
+                    (
+                        target.with(translation(transform.translation, target_translation)),
+                        target.with(rotation(transform.rotation, direction.into())),
+                    ),
+                ),
+                event(GridTweenCleanup(tween_parent_id)),
+            )));
+        });
+    }
+}
+
+fn ramp_height_correction_system(
+    mut positioned: Query<&mut Transform, With<GridAmbulatory>>,
+    ramps: Query<(&GridPosition, &GridDirection), With<RampBlock>>,
+) {
+    for mut transform in &mut positioned {
+        let current_position = GridPosition::from(transform.translation);
+        if let Some((ramp_position, ramp_direction)) =
+            find_ramp_position_direction(&current_position, &ramps)
+        {
+            let base_height = Vec3::from(ramp_position).y;
+            let ramp_diff_z = transform.translation.z - ramp_position.z as f32;
+            let ramp_diff_x = transform.translation.x - ramp_position.x as f32;
+            let ramp_height = match ramp_direction.0 {
+                Direction::North => 0.5 - ramp_diff_z,
+                Direction::East => 0.5 + ramp_diff_x,
+                Direction::South => 0.5 + ramp_diff_z,
+                Direction::West => 0.5 - ramp_diff_x,
+            };
+
+            transform.translation.y = transform.translation.y.max(base_height + ramp_height);
+        }
     }
 }
 

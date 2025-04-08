@@ -17,7 +17,7 @@ pub struct LayerData {
 pub enum LayerVariant {
     Particles(Vec<EntityInstance>),
     Walls(Vec<TileInstance>),
-    Ramps(Vec<TileInstance>),
+    Ramps(Vec<EntityInstance>),
 }
 
 impl TryFrom<&LayerInstance> for LayerData {
@@ -36,21 +36,19 @@ impl TryFrom<&LayerInstance> for LayerData {
         let variant = match value.layer_instance_type {
             ldtk::Type::Entities => match variant_str {
                 "Particles" => LayerVariant::Particles(value.entity_instances.clone()),
+                "Ramps" => LayerVariant::Ramps(value.entity_instances.clone()),
                 _ => return Err(ParseLayerError::Variant(variant_str.into())),
             },
             ldtk::Type::AutoLayer => match variant_str {
                 "Walls" => LayerVariant::Walls(value.auto_layer_tiles.clone()),
-                "Ramps" => LayerVariant::Ramps(value.auto_layer_tiles.clone()),
                 _ => return Err(ParseLayerError::Variant(variant_str.into())),
             },
             ldtk::Type::IntGrid => match variant_str {
                 "Walls" => LayerVariant::Walls(value.auto_layer_tiles.clone()),
-                "Ramps" => LayerVariant::Ramps(value.auto_layer_tiles.clone()),
                 _ => return Err(ParseLayerError::Variant(variant_str.into())),
             },
             ldtk::Type::Tiles => match variant_str {
                 "Walls" => LayerVariant::Walls(value.grid_tiles.clone()),
-                "Ramps" => LayerVariant::Ramps(value.grid_tiles.clone()),
                 _ => return Err(ParseLayerError::Variant(variant_str.into())),
             },
         };

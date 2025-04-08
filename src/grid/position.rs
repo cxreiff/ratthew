@@ -59,8 +59,8 @@ impl GridPosition {
         ramp_direction: Option<GridDirection>,
     ) -> (i32, i32) {
         if let Some(ramp_direction) = ramp_direction {
-            let edge_direction_index = Self::direction_vector_offset(&edge_direction);
-            let ramp_direction_index = Self::direction_vector_offset(&ramp_direction);
+            let edge_direction_index = Self::direction_vector_offset(&edge_direction) as i32;
+            let ramp_direction_index = Self::direction_vector_offset(&ramp_direction) as i32;
 
             let offset = match (edge_direction_index - ramp_direction_index).rem_euclid(4) {
                 0 => (1, 1),
@@ -86,5 +86,15 @@ impl From<GridPosition> for Vec3 {
 impl From<&GridPosition> for Vec3 {
     fn from(value: &GridPosition) -> Self {
         Vec3::from(*value)
+    }
+}
+
+impl From<Vec3> for GridPosition {
+    fn from(value: Vec3) -> Self {
+        Self(IVec3::new(
+            (value.x - 0.25).round() as i32,
+            (value.y - 0.25).round() as i32,
+            (value.z - 0.25).round() as i32,
+        ))
     }
 }

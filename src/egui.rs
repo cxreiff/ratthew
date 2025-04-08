@@ -40,7 +40,7 @@ fn draw_scene_system(
     mut egui: EguiContexts,
     player_widget: Query<&RatatuiCameraWidget, With<PlayerCamera>>,
     world_widget: Query<&RatatuiCameraWidget, With<WorldCamera>>,
-    player_position: Query<&GridPosition, With<PlayerCamera>>,
+    player: Query<(&GridPosition, &Transform), With<PlayerCamera>>,
     flags: Res<Flags>,
     diagnostics: Res<DiagnosticsStore>,
     kitty_enabled: Option<Res<KittyEnabled>>,
@@ -51,7 +51,7 @@ fn draw_scene_system(
             &flags,
             &diagnostics,
             kitty_enabled.as_deref(),
-            player_position.get_single().ok(),
+            player.get_single().ok(),
             false,
         );
 

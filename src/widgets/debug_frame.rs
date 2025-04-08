@@ -1,5 +1,6 @@
-use bevy::diagnostic::{
-    DiagnosticsStore, EntityCountDiagnosticsPlugin, FrameTimeDiagnosticsPlugin,
+use bevy::{
+    diagnostic::{DiagnosticsStore, EntityCountDiagnosticsPlugin, FrameTimeDiagnosticsPlugin},
+    prelude::Transform,
 };
 use bevy_ratatui::kitty::KittyEnabled;
 use ratatui::{
@@ -17,7 +18,7 @@ pub fn debug_frame(
     flags: &Flags,
     diagnostics: &DiagnosticsStore,
     kitty_enabled: Option<&KittyEnabled>,
-    player_position: Option<&GridPosition>,
+    player: Option<(&GridPosition, &Transform)>,
     show_log_panel: bool,
 ) -> ratatui::layout::Rect {
     let mut block = Block::bordered()
@@ -61,10 +62,15 @@ pub fn debug_frame(
             block = block.title_top(format!("[fps: {value:.0}]"));
         }
 
-        if let Some(position) = player_position {
+        if let Some((position, transform)) = player {
             block = block.title_top(format!(
                 "[xyz: {}, {}, {}]",
                 position.x, position.y, position.z
+            ));
+            let assumed_xyz = GridPosition::from(transform.translation);
+            block = block.title_top(format!(
+                "[assumed_xyz: {}, {}, {}]",
+                assumed_xyz.x, assumed_xyz.y, assumed_xyz.z
             ));
         }
 
