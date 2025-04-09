@@ -1,10 +1,12 @@
 use bevy::{
     core_pipeline::Skybox, gltf::Gltf, prelude::*, render::view::RenderLayers, utils::HashMap,
 };
-use bevy_ratatui_camera::{LuminanceConfig, RatatuiCamera, RatatuiCameraStrategy};
+use bevy_ratatui_camera::{
+    LuminanceConfig, RatatuiCamera, RatatuiCameraEdgeDetection, RatatuiCameraStrategy,
+};
 
 use crate::{
-    grid::{Direction, GridAmbulatory, GridAnimated, GridDirection, GridPosition},
+    grid::{Direction, GridAnimated, GridDirection, GridPosition},
     levels::GameAssets,
     GameStates,
 };
@@ -48,10 +50,9 @@ fn setup_camera_system(
                 ..default()
             }),
             PlayerCamera,
-            GridPosition(IVec3::new(12, 1, 6)),
+            GridPosition(IVec3::new(13, 1, 8)),
             GridDirection(Direction::South),
-            GridAnimated,
-            GridAmbulatory,
+            GridAnimated::default(),
         ))
         .with_children(|parent| {
             parent.spawn((
@@ -71,12 +72,14 @@ fn setup_camera_system(
                     ..default()
                 }),
                 RatatuiCamera::default(),
-                // RatatuiCameraStrategy::Luminance(LuminanceConfig {
-                //     bg_color_scale: 0.4,
-                //     luminance_characters: LuminanceConfig::LUMINANCE_CHARACTERS_MISC.into(),
-                //     ..default()
-                // }),
-                // RatatuiCameraEdgeDetection { ..default() },
+                RatatuiCameraStrategy::Luminance(LuminanceConfig {
+                    luminance_characters: LuminanceConfig::LUMINANCE_CHARACTERS_MISC.into(),
+                    ..default()
+                }),
+                RatatuiCameraEdgeDetection {
+                    color_enabled: false,
+                    ..default()
+                },
                 WorldCamera,
                 Skybox {
                     image: asset_server.load("skybox.ktx2"),

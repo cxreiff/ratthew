@@ -11,14 +11,17 @@ use ratatui::{
 };
 use tui_logger::TuiLoggerWidget;
 
-use crate::{grid::GridPosition, Flags};
+use crate::{
+    grid::{GridAnimated, GridPosition},
+    Flags,
+};
 
 pub fn debug_frame(
     frame: &mut Frame,
     flags: &Flags,
     diagnostics: &DiagnosticsStore,
     kitty_enabled: Option<&KittyEnabled>,
-    player: Option<(&GridPosition, &Transform)>,
+    player: Option<(&GridPosition, &Transform, &GridAnimated)>,
     show_log_panel: bool,
 ) -> ratatui::layout::Rect {
     let mut block = Block::bordered()
@@ -62,12 +65,12 @@ pub fn debug_frame(
             block = block.title_top(format!("[fps: {value:.0}]"));
         }
 
-        if let Some((position, transform)) = player {
+        if let Some((position, _transform, animated)) = player {
             block = block.title_top(format!(
                 "[xyz: {}, {}, {}]",
                 position.x, position.y, position.z
             ));
-            let assumed_xyz = GridPosition::from(transform.translation);
+            let assumed_xyz = GridPosition::from(animated.buffer_transform);
             block = block.title_top(format!(
                 "[assumed_xyz: {}, {}, {}]",
                 assumed_xyz.x, assumed_xyz.y, assumed_xyz.z

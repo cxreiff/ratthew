@@ -4,8 +4,8 @@ use crate::levels::{RampBlock, WallBlock};
 
 use super::{
     animation::GridMoveBlocked,
-    utilities::{find_ramp_position, find_ramp_position_direction, find_wall_position},
-    GridAmbulatory, GridAnimated, GridDirection, GridPosition, GridSystemSet,
+    utilities::{find_ramp_position_direction, find_wall_position},
+    GridAnimated, GridDirection, GridPosition, GridSystemSet,
 };
 
 pub(super) fn plugin(app: &mut App) {
@@ -103,17 +103,12 @@ fn grid_movement_attempt_observer(
 
 fn grid_static_position_movement_system(
     mut grid_position_changed: Query<
-        (&GridPosition, &mut Transform, Option<&GridAmbulatory>),
+        (&GridPosition, &mut Transform),
         (Changed<GridPosition>, Without<GridAnimated>),
     >,
-    ramps: Query<&GridPosition, With<RampBlock>>,
 ) {
-    for (position, mut transform, ambulatory) in &mut grid_position_changed {
+    for (position, mut transform) in &mut grid_position_changed {
         transform.translation = position.into();
-
-        if ambulatory.is_some() && find_ramp_position(position, &ramps).is_some() {
-            transform.translation.y += 0.5;
-        }
     }
 }
 

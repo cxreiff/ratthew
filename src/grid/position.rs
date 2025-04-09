@@ -5,9 +5,6 @@ use super::direction::{Direction, GridDirection};
 #[derive(Component, Clone, Copy, Debug, Default, Deref, DerefMut)]
 pub struct GridPosition(pub IVec3);
 
-#[derive(Component, Clone, Copy, Debug, Default)]
-pub struct GridAmbulatory;
-
 impl GridPosition {
     const DIRECTION_VECTORS: [IVec3; 4] = [
         IVec3::new(0, 0, -1),
@@ -92,9 +89,9 @@ impl From<&GridPosition> for Vec3 {
 impl From<Vec3> for GridPosition {
     fn from(value: Vec3) -> Self {
         Self(IVec3::new(
-            (value.x - 0.25).round() as i32,
-            (value.y - 0.25).round() as i32,
-            (value.z - 0.25).round() as i32,
+            value.x.round() as i32,
+            value.y.round() as i32,
+            value.z.round() as i32,
         ))
     }
 }

@@ -17,7 +17,7 @@ use bevy_ratatui_camera::RatatuiCameraWidget;
 use crossterm::event::KeyEventKind;
 
 use crate::camera::{PlayerCamera, WorldCamera};
-use crate::grid::GridPosition;
+use crate::grid::{GridAnimated, GridPosition};
 use crate::widgets::debug_frame::debug_frame;
 use crate::Flags;
 use crate::GameStates;
@@ -49,7 +49,7 @@ fn draw_scene_system(
     mut ratatui: ResMut<RatatuiContext>,
     player_widget: Query<&RatatuiCameraWidget, With<PlayerCamera>>,
     world_widget: Query<&RatatuiCameraWidget, With<WorldCamera>>,
-    player: Query<(&GridPosition, &Transform), With<PlayerCamera>>,
+    player: Query<(&GridPosition, &Transform, &GridAnimated), With<PlayerCamera>>,
     flags: Res<Flags>,
     diagnostics: Res<DiagnosticsStore>,
     kitty_enabled: Option<Res<KittyEnabled>>,

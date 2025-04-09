@@ -10,7 +10,7 @@ use ratatui::Terminal;
 
 use crate::{
     camera::{PlayerCamera, WorldCamera},
-    grid::GridPosition,
+    grid::{GridAnimated, GridPosition},
     widgets::debug_frame::debug_frame,
     Flags,
 };
@@ -28,7 +28,7 @@ struct EguiTerminal(Terminal<RataguiBackend>);
 impl Default for EguiTerminal {
     fn default() -> Self {
         let mut backend = RataguiBackend::new(512, 512);
-        backend.set_font_size(12);
+        backend.set_font_size(18);
         Self(Terminal::new(backend).unwrap())
     }
 }
@@ -40,7 +40,7 @@ fn draw_scene_system(
     mut egui: EguiContexts,
     player_widget: Query<&RatatuiCameraWidget, With<PlayerCamera>>,
     world_widget: Query<&RatatuiCameraWidget, With<WorldCamera>>,
-    player: Query<(&GridPosition, &Transform), With<PlayerCamera>>,
+    player: Query<(&GridPosition, &Transform, &GridAnimated), With<PlayerCamera>>,
     flags: Res<Flags>,
     diagnostics: Res<DiagnosticsStore>,
     kitty_enabled: Option<Res<KittyEnabled>>,

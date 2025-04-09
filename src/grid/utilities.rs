@@ -12,15 +12,6 @@ pub fn find_wall_position<'a>(
         .find(|wall_position| wall_position.eq(position))
 }
 
-pub fn find_ramp_position<'a>(
-    position: &GridPosition,
-    ramps: &'a Query<&GridPosition, With<RampBlock>>,
-) -> Option<&'a GridPosition> {
-    ramps
-        .iter()
-        .find(|ramp_position| position.eq(ramp_position))
-}
-
 pub fn find_ramp_position_direction<'a>(
     position: &GridPosition,
     ramps: &'a Query<(&GridPosition, &GridDirection), With<RampBlock>>,

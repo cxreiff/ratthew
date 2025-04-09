@@ -8,8 +8,9 @@ mod position;
 mod utilities;
 
 pub use animation::GridAnimated;
+use bevy_tween::TweenSystemSet;
 pub use direction::{Direction, GridDirection};
-pub use position::{GridAmbulatory, GridPosition};
+pub use position::GridPosition;
 
 use crate::GameStates;
 
@@ -23,12 +24,14 @@ enum GridSystemSet {
 pub(super) fn plugin(app: &mut App) {
     app.configure_sets(
         Update,
-        (
-            GridSystemSet::HandleInput,
-            GridSystemSet::Movement,
-            GridSystemSet::Cleanup,
-        )
+        (GridSystemSet::HandleInput, GridSystemSet::Movement)
             .chain()
+            .run_if(in_state(GameStates::Playing)),
+    )
+    .configure_sets(
+        PostUpdate,
+        GridSystemSet::Cleanup
+            .after(TweenSystemSet::ApplyTween)
             .run_if(in_state(GameStates::Playing)),
     )
     .add_plugins((animation::plugin, input::plugin, movement::plugin));
