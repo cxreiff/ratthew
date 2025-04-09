@@ -76,10 +76,7 @@ fn setup_camera_system(
                     luminance_characters: LuminanceConfig::LUMINANCE_CHARACTERS_MISC.into(),
                     ..default()
                 }),
-                RatatuiCameraEdgeDetection {
-                    color_enabled: false,
-                    ..default()
-                },
+                RatatuiCameraEdgeDetection::default(),
                 WorldCamera,
                 Skybox {
                     image: asset_server.load("skybox.ktx2"),

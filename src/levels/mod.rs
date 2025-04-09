@@ -2,8 +2,9 @@ use bevy::prelude::*;
 
 mod layer;
 mod loading;
-mod ramp;
+mod upright_billboard;
 mod upright_cube;
+mod upright_ramp;
 
 pub use loading::{GameAssets, RampBlock, WallBlock};
 

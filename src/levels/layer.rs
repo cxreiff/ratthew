@@ -18,6 +18,7 @@ pub enum LayerVariant {
     Particles(Vec<EntityInstance>),
     Walls(Vec<TileInstance>),
     Ramps(Vec<EntityInstance>),
+    Billboards(Vec<EntityInstance>),
 }
 
 impl TryFrom<&LayerInstance> for LayerData {
@@ -37,6 +38,7 @@ impl TryFrom<&LayerInstance> for LayerData {
             ldtk::Type::Entities => match variant_str {
                 "Particles" => LayerVariant::Particles(value.entity_instances.clone()),
                 "Ramps" => LayerVariant::Ramps(value.entity_instances.clone()),
+                "Billboards" => LayerVariant::Billboards(value.entity_instances.clone()),
                 _ => return Err(ParseLayerError::Variant(variant_str.into())),
             },
             ldtk::Type::AutoLayer => match variant_str {

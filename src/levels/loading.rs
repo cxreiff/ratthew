@@ -23,7 +23,10 @@ use crate::{
     GameStates,
 };
 
-use super::{layer::LayerVariant, ramp::UprightRamp, upright_cube::UprightCube};
+use super::{
+    layer::LayerVariant, upright_billboard::UprightBillboard, upright_cube::UprightCube,
+    upright_ramp::UprightRamp,
+};
 
 pub(super) fn plugin(app: &mut App) {
     app.add_plugins(LdtkAssetPlugin)
@@ -68,6 +71,9 @@ pub struct UprightCubeMesh(Handle<Mesh>);
 pub struct RampMesh(Handle<Mesh>);
 
 #[derive(Resource, Debug, Clone, Deref, DerefMut)]
+pub struct BillboardMesh(Handle<Mesh>);
+
+#[derive(Resource, Debug, Clone, Deref, DerefMut)]
 pub struct MissingMaterial(Handle<StandardMaterial>);
 
 #[derive(Component, Debug, Clone)]
@@ -77,6 +83,9 @@ pub struct WallBlock;
 #[require(GridDirection)]
 pub struct RampBlock;
 
+#[derive(Component, Debug, Clone)]
+pub struct Billboard;
+
 fn level_load_setup_system(
     mut commands: Commands,
     mut meshes: ResMut<Assets<Mesh>>,
@@ -84,6 +93,7 @@ fn level_load_setup_system(
 ) {
     commands.insert_resource(UprightCubeMesh(meshes.add(UprightCube)));
     commands.insert_resource(RampMesh(meshes.add(UprightRamp)));
+    commands.insert_resource(BillboardMesh(meshes.add(UprightBillboard)));
     commands.insert_resource(MissingMaterial(
         materials.add(StandardMaterial::from(Color::srgb(1., 0., 0.))),
     ));
@@ -126,6 +136,7 @@ fn level_load_observer(
     particle_handle: Res<GradientEffect>,
     upright_cube_mesh: Res<UprightCubeMesh>,
     ramp_mesh: Res<RampMesh>,
+    billboard_mesh: Res<BillboardMesh>,
     missing_material: Res<MissingMaterial>,
 ) {
     let tileset = images.get(&handles.tileset).unwrap();
@@ -187,6 +198,20 @@ fn level_load_observer(
                             layer_data.sprite_size,
                             &instances,
                             &ramp_mesh,
+                        );
+                    }
+                    LayerVariant::Billboards(instances) => {
+                        spawn_billboard(
+                            commands.reborrow(),
+                            &mut materials,
+                            &mut images,
+                            &mut tileset,
+                            &missing_material,
+                            *altitude,
+                            layer_data.sprite_size,
+                            &instances,
+                            &billboard_mesh,
+                            Billboard,
                         );
                     }
                 };
@@ -306,6 +331,48 @@ fn spawn_layer_ramps(
     }
 }
 
+fn spawn_billboard<T>(
+    mut commands: Commands,
+    materials: &mut ResMut<Assets<StandardMaterial>>,
+    images: &mut ResMut<Assets<Image>>,
+    tileset: &mut DynamicImage,
+    missing_material: &Handle<StandardMaterial>,
+    altitude: i32,
+    sprite_size: IVec2,
+    instances: &[EntityInstance],
+    billboard_mesh: &BillboardMesh,
+    markers: T,
+) where
+    T: Clone + Bundle,
+{
+    let material_map = generate_ldtk_entity_material_map(materials, images, tileset, instances);
+
+    for entity in instances.iter() {
+        let Some(tile) = entity.tile else {
+            continue;
+        };
+
+        commands
+            .spawn((
+                SpawnedFromLdtk,
+                GridPosition(IVec3::new(
+                    entity.px.x / sprite_size.y,
+                    altitude,
+                    entity.px.y / sprite_size.y,
+                )),
+                Mesh3d(billboard_mesh.0.clone()),
+                MeshMaterial3d(
+                    material_map
+                        .get(&(tile.x, tile.y))
+                        .unwrap_or(missing_material)
+                        .clone(),
+                ),
+                RenderLayers::layer(1),
+            ))
+            .insert(markers.clone());
+    }
+}
+
 fn generate_ldtk_material_map(
     materials: &mut ResMut<Assets<StandardMaterial>>,
     images: &mut ResMut<Assets<Image>>,
@@ -371,7 +438,7 @@ fn generate_spritesheet_material_entity(
     materials.add(StandardMaterial {
         reflectance: 0.,
         perceptual_roughness: 1.0,
-
+        alpha_mode: AlphaMode::Mask(0.1),
         base_color_texture: Some(images.add(Image::from_dynamic(
             tileset.crop(tile.x as u32, tile.y as u32, 16, 16),
             true,
