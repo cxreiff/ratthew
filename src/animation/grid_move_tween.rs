@@ -3,12 +3,12 @@ use std::time::Duration;
 use bevy::prelude::*;
 use bevy_tween::{interpolate::rotation, prelude::EaseKind};
 
-use crate::{animations::grid_animated::grid_animated_transform, grid::GridPosition};
+use crate::{animation::grid_animated::grid_animated_transform, grid::GridPosition};
 
 use super::animation_trait::AutoTween;
 
 #[derive(Component, Clone, Debug, Default)]
-pub struct GridMoveAnimation {
+pub struct GridMoveTween {
     pub start_position: GridPosition,
     pub end_position: GridPosition,
     pub start_rotation: Quat,
@@ -16,10 +16,10 @@ pub struct GridMoveAnimation {
 }
 
 #[derive(Component, Clone, Debug, Default)]
-pub struct GridMoveAnimationHolder;
+pub struct GridMoveTweenHolder;
 
-impl AutoTween for GridMoveAnimation {
-    type Holder = GridMoveAnimationHolder;
+impl AutoTween for GridMoveTween {
+    type Holder = GridMoveTweenHolder;
 
     fn insert_tween(
         &self,

@@ -9,7 +9,7 @@ use egui_ratatui::RataguiBackend;
 use ratatui::Terminal;
 
 use crate::{
-    animations::GridAnimated,
+    animation::GridAnimated,
     camera::{PlayerCamera, WorldCamera},
     grid::GridPosition,
     widgets::debug_frame::debug_frame,

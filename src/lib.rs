@@ -6,7 +6,7 @@ use bevy::winit::WinitPlugin;
 use bevy_ratatui_camera::RatatuiCameraPlugin;
 use bevy_tween::DefaultTweenPlugins;
 
-mod animations;
+mod animation;
 mod camera;
 mod grid;
 mod levels;
@@ -59,7 +59,7 @@ pub fn plugin(app: &mut App) {
         RatatuiCameraPlugin,
         FrameTimeDiagnosticsPlugin,
         EntityCountDiagnosticsPlugin,
-        animations::plugin,
+        animation::plugin,
         camera::plugin,
         particles::plugin,
         levels::plugin,

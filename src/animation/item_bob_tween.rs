@@ -9,13 +9,13 @@ use bevy_tween::{
 use super::animation_trait::AutoTween;
 
 #[derive(Component, Clone, Debug, Default)]
-pub struct ItemBobAnimation;
+pub struct ItemBobTween;
 
 #[derive(Component, Clone, Debug, Default)]
-pub struct ItemBobAnimationHolder;
+pub struct ItemBobTweenHolder;
 
-impl AutoTween for ItemBobAnimation {
-    type Holder = ItemBobAnimationHolder;
+impl AutoTween for ItemBobTween {
+    type Holder = ItemBobTweenHolder;
 
     fn insert_tween(
         &self,

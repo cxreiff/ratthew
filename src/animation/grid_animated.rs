@@ -6,7 +6,8 @@ use bevy_tween::{
 use crate::grid::GridPosition;
 
 pub fn plugin(app: &mut App) {
-    app.add_tween_systems(component_tween_system::<InterpolateGridAnimated>());
+    app.add_observer(grid_animated_setup_observer)
+        .add_tween_systems(component_tween_system::<InterpolateGridAnimated>());
 }
 
 #[derive(Component, Debug, Default)]
@@ -14,6 +15,24 @@ pub fn plugin(app: &mut App) {
 pub struct GridAnimated {
     pub buffer_transform: Vec3,
     pub previous_position: GridPosition,
+}
+
+impl GridAnimated {
+    pub fn update_previous(&mut self, position: GridPosition) -> GridPosition {
+        let previous = self.previous_position;
+        self.previous_position = position;
+
+        previous
+    }
+}
+
+fn grid_animated_setup_observer(
+    trigger: Trigger<OnInsert, GridAnimated>,
+    mut grid_animated: Query<(&GridPosition, &mut GridAnimated)>,
+) {
+    let (grid_position, mut grid_animated) = grid_animated.get_mut(trigger.entity()).unwrap();
+    grid_animated.buffer_transform = grid_position.into();
+    grid_animated.previous_position = *grid_position;
 }
 
 pub struct InterpolateGridAnimated {

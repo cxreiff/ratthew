@@ -1,7 +1,7 @@
 use bevy::prelude::*;
 
 use crate::{
-    animations::{GridAnimated, GridMoveAnimation, GridMoveBlockedAnimation},
+    animation::{GridAnimated, GridMoveBlockedTween, GridMoveTween},
     levels::RampBlock,
 };
 
@@ -10,14 +10,15 @@ use super::{
 };
 
 pub(super) fn plugin(app: &mut App) {
-    app.add_observer(grid_animated_setup_observer).add_systems(
-        PostUpdate,
-        (
-            grid_animated_movement_system.in_set(GridSystemSet::Movement),
-            ramp_height_correction_system.in_set(GridSystemSet::Movement),
-        )
-            .chain(),
-    );
+    app.add_observer(grid_movement_blocked_observer)
+        .add_systems(
+            PostUpdate,
+            (
+                grid_animated_movement_system.in_set(GridSystemSet::Movement),
+                ramp_height_correction_system.in_set(GridSystemSet::Movement),
+            )
+                .chain(),
+        );
 }
 
 #[derive(Event, Default, Debug, Clone)]
@@ -29,20 +30,6 @@ pub struct GridMoveParent;
 #[derive(Component, Default, Debug, Clone)]
 pub struct GridMoveBlockedParent;
 
-fn grid_animated_setup_observer(
-    trigger: Trigger<OnAdd, GridAnimated>,
-    mut commands: Commands,
-    mut grid_animated: Query<(&GridPosition, &mut GridAnimated)>,
-) {
-    let (grid_position, mut grid_animated) = grid_animated.get_mut(trigger.entity()).unwrap();
-    grid_animated.buffer_transform = grid_position.into();
-    grid_animated.previous_position = *grid_position;
-
-    commands
-        .entity(trigger.entity())
-        .observe(grid_movement_blocked_observer);
-}
-
 fn grid_movement_blocked_observer(
     trigger: Trigger<GridMoveBlocked>,
     mut commands: Commands,
@@ -50,13 +37,11 @@ fn grid_movement_blocked_observer(
 ) {
     let (transform, grid_direction, grid_animated) = grid_positions.get(trigger.entity()).unwrap();
 
-    commands
-        .entity(trigger.entity())
-        .remove::<GridMoveAnimation>();
+    commands.entity(trigger.entity()).remove::<GridMoveTween>();
 
     commands
         .entity(trigger.entity())
-        .insert(GridMoveBlockedAnimation {
+        .insert(GridMoveBlockedTween {
             start_position: grid_animated.previous_position,
             blocked_position: trigger.event().0,
             start_rotation: transform.rotation,
@@ -78,13 +63,11 @@ fn grid_animated_movement_system(
     >,
 ) {
     for (entity, &position, direction, transform, mut animated) in &mut grid_position_changed {
-        let previous = animated.previous_position;
-        animated.previous_position = position;
+        let previous = animated.update_previous(position);
 
-        commands.entity(entity).remove::<GridMoveAnimation>();
-        commands.entity(entity).remove::<GridMoveBlockedAnimation>();
+        commands.entity(entity).remove::<GridMoveBlockedTween>();
 
-        commands.entity(entity).insert(GridMoveAnimation {
+        commands.entity(entity).insert(GridMoveTween {
             start_position: previous,
             end_position: position,
             start_rotation: transform.rotation,

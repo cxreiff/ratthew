@@ -12,7 +12,7 @@ use crate::grid::GridPosition;
 use super::{animation_trait::AutoTween, grid_animated_transform};
 
 #[derive(Component, Clone, Debug, Default)]
-pub struct GridMoveBlockedAnimation {
+pub struct GridMoveBlockedTween {
     pub start_position: GridPosition,
     pub blocked_position: GridPosition,
     pub start_rotation: Quat,
@@ -20,10 +20,10 @@ pub struct GridMoveBlockedAnimation {
 }
 
 #[derive(Component, Clone, Debug, Default)]
-pub struct GridMoveBlockedAnimationHolder;
+pub struct GridMoveBlockedTweenHolder;
 
-impl AutoTween for GridMoveBlockedAnimation {
-    type Holder = GridMoveBlockedAnimationHolder;
+impl AutoTween for GridMoveBlockedTween {
+    type Holder = GridMoveBlockedTweenHolder;
 
     fn insert_tween(
         &self,

@@ -1,7 +1,7 @@
 use bevy::prelude::*;
 
 use crate::{
-    animations::GridAnimated,
+    animation::GridAnimated,
     levels::{RampBlock, WallBlock},
 };
 
