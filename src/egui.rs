@@ -9,8 +9,9 @@ use egui_ratatui::RataguiBackend;
 use ratatui::Terminal;
 
 use crate::{
+    animations::GridAnimated,
     camera::{PlayerCamera, WorldCamera},
-    grid::{GridAnimated, GridPosition},
+    grid::GridPosition,
     widgets::debug_frame::debug_frame,
     Flags,
 };
@@ -28,7 +29,7 @@ struct EguiTerminal(Terminal<RataguiBackend>);
 impl Default for EguiTerminal {
     fn default() -> Self {
         let mut backend = RataguiBackend::new(512, 512);
-        backend.set_font_size(18);
+        backend.set_font_size(12);
         Self(Terminal::new(backend).unwrap())
     }
 }

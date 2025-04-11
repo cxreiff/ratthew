@@ -7,7 +7,6 @@ mod movement;
 mod position;
 mod utilities;
 
-pub use animation::GridAnimated;
 use bevy_tween::TweenSystemSet;
 pub use direction::{Direction, GridDirection};
 pub use position::GridPosition;
@@ -15,7 +14,7 @@ pub use position::GridPosition;
 use crate::GameStates;
 
 #[derive(SystemSet, Debug, Hash, PartialEq, Eq, Clone)]
-enum GridSystemSet {
+pub enum GridSystemSet {
     HandleInput,
     Movement,
     Cleanup,

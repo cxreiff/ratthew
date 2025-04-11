@@ -16,8 +16,9 @@ use bevy_ratatui::RatatuiPlugins;
 use bevy_ratatui_camera::RatatuiCameraWidget;
 use crossterm::event::KeyEventKind;
 
+use crate::animations::GridAnimated;
 use crate::camera::{PlayerCamera, WorldCamera};
-use crate::grid::{GridAnimated, GridPosition};
+use crate::grid::GridPosition;
 use crate::widgets::debug_frame::debug_frame;
 use crate::Flags;
 use crate::GameStates;

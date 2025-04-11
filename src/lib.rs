@@ -1,4 +1,3 @@
-use animation::sword_bob_system;
 use bevy::diagnostic::{EntityCountDiagnosticsPlugin, FrameTimeDiagnosticsPlugin};
 use bevy::log::LogPlugin;
 use bevy::prelude::*;
@@ -7,7 +6,7 @@ use bevy::winit::WinitPlugin;
 use bevy_ratatui_camera::RatatuiCameraPlugin;
 use bevy_tween::DefaultTweenPlugins;
 
-mod animation;
+mod animations;
 mod camera;
 mod grid;
 mod levels;
@@ -60,6 +59,7 @@ pub fn plugin(app: &mut App) {
         RatatuiCameraPlugin,
         FrameTimeDiagnosticsPlugin,
         EntityCountDiagnosticsPlugin,
+        animations::plugin,
         camera::plugin,
         particles::plugin,
         levels::plugin,
@@ -71,13 +71,7 @@ pub fn plugin(app: &mut App) {
     ))
     .insert_resource(Flags { debug: false })
     .insert_resource(ClearColor(Color::BLACK))
-    .add_systems(
-        Update,
-        (
-            global_input_system,
-            sword_bob_system.run_if(in_state(GameStates::Playing)),
-        ),
-    );
+    .add_systems(Update, global_input_system);
 }
 
 pub fn global_input_system(

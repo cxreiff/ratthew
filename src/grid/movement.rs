@@ -1,11 +1,14 @@
 use bevy::prelude::*;
 
-use crate::levels::{RampBlock, WallBlock};
+use crate::{
+    animations::GridAnimated,
+    levels::{RampBlock, WallBlock},
+};
 
 use super::{
     animation::GridMoveBlocked,
     utilities::{find_ramp_position_direction, find_wall_position},
-    GridAnimated, GridDirection, GridPosition, GridSystemSet,
+    GridDirection, GridPosition, GridSystemSet,
 };
 
 pub(super) fn plugin(app: &mut App) {

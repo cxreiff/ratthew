@@ -11,10 +11,7 @@ use ratatui::{
 };
 use tui_logger::TuiLoggerWidget;
 
-use crate::{
-    grid::{GridAnimated, GridPosition},
-    Flags,
-};
+use crate::{animations::GridAnimated, grid::GridPosition, Flags};
 
 pub fn debug_frame(
     frame: &mut Frame,

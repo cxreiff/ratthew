@@ -6,7 +6,8 @@ use bevy_ratatui_camera::{
 };
 
 use crate::{
-    grid::{Direction, GridAnimated, GridDirection, GridPosition},
+    animations::{GridAnimated, ItemBobAnimation},
+    grid::{Direction, GridDirection, GridPosition},
     levels::GameAssets,
     GameStates,
 };
@@ -94,6 +95,7 @@ fn setup_camera_system(
                 parent.spawn((
                     RenderLayers::layer(0), // setting this does not set gltf children
                     SceneRoot(gltf.scenes[0].clone()),
+                    ItemBobAnimation,
                     sword_transform,
                     Sword,
                 ));
