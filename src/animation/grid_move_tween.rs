@@ -5,7 +5,7 @@ use bevy_tween::{interpolate::rotation, prelude::EaseKind};
 
 use crate::{animation::grid_animated::grid_animated_transform, grid::GridPosition};
 
-use super::animation_trait::AutoTween;
+use super::auto_tween_trait::AutoTween;
 
 #[derive(Component, Clone, Debug, Default)]
 pub struct GridMoveTween {

@@ -1,7 +1,7 @@
-use animation_trait::AutoTween;
+use auto_tween_trait::AutoTween;
 use bevy::prelude::*;
 
-mod animation_trait;
+mod auto_tween_trait;
 mod grid_animated;
 mod grid_blocked_tween;
 mod grid_move_tween;

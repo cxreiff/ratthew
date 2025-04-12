@@ -1,6 +1,5 @@
-use bevy::{
-    diagnostic::{DiagnosticsStore, EntityCountDiagnosticsPlugin, FrameTimeDiagnosticsPlugin},
-    prelude::Transform,
+use bevy::diagnostic::{
+    DiagnosticsStore, EntityCountDiagnosticsPlugin, FrameTimeDiagnosticsPlugin,
 };
 use bevy_ratatui::kitty::KittyEnabled;
 use ratatui::{
@@ -11,14 +10,17 @@ use ratatui::{
 };
 use tui_logger::TuiLoggerWidget;
 
-use crate::{animation::GridAnimated, grid::GridPosition, Flags};
+use crate::{
+    grid::{GridDirection, GridPosition},
+    Flags,
+};
 
 pub fn debug_frame(
     frame: &mut Frame,
     flags: &Flags,
     diagnostics: &DiagnosticsStore,
     kitty_enabled: Option<&KittyEnabled>,
-    player: Option<(&GridPosition, &Transform, &GridAnimated)>,
+    player: Option<(&GridPosition, &GridDirection)>,
     show_log_panel: bool,
 ) -> ratatui::layout::Rect {
     let mut block = Block::bordered()
@@ -55,23 +57,23 @@ pub fn debug_frame(
             block = block.title_top(format!("[entities: {value}]"));
         }
 
-        if let Some(value) = diagnostics
-            .get(&FrameTimeDiagnosticsPlugin::FPS)
-            .and_then(|fps| fps.smoothed())
-        {
-            block = block.title_top(format!("[fps: {value:.0}]"));
-        }
-
-        if let Some((position, _transform, animated)) = player {
+        if let Some((position, direction)) = player {
             block = block.title_top(format!(
                 "[xyz: {}, {}, {}]",
                 position.x, position.y, position.z
             ));
-            let assumed_xyz = GridPosition::from(animated.buffer_transform);
+
             block = block.title_top(format!(
-                "[assumed_xyz: {}, {}, {}]",
-                assumed_xyz.x, assumed_xyz.y, assumed_xyz.z
+                "[direction: {}]",
+                format!("{:?}", direction.0).to_lowercase()
             ));
+        }
+
+        if let Some(value) = diagnostics
+            .get(&FrameTimeDiagnosticsPlugin::FPS)
+            .and_then(|fps| fps.smoothed())
+        {
+            block = block.title_top(format!("[fps: {value:3.0}]"));
         }
 
         let inner = block.inner(layout[0]);

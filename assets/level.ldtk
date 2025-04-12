@@ -11,7 +11,7 @@
 	"iid": "43f0c7b0-fec0-11ee-9f74-49909a59dd92",
 	"jsonVersion": "1.5.3",
 	"appBuildId": 473703,
-	"nextUid": 44,
+	"nextUid": 46,
 	"identifierStyle": "Capitalize",
 	"toc": [],
 	"worldLayout": "GridVania",
@@ -475,6 +475,76 @@
 			"pivotX": 0,
 			"pivotY": 0,
 			"fieldDefs": []
+		},
+		{
+			"identifier": "Parapet",
+			"uid": 44,
+			"tags": [],
+			"exportToToc": false,
+			"allowOutOfBounds": false,
+			"doc": null,
+			"width": 16,
+			"height": 16,
+			"resizableX": false,
+			"resizableY": false,
+			"minWidth": null,
+			"maxWidth": null,
+			"minHeight": null,
+			"maxHeight": null,
+			"keepAspectRatio": false,
+			"tileOpacity": 1,
+			"fillOpacity": 0.08,
+			"lineOpacity": 0,
+			"hollow": false,
+			"color": "#733E39",
+			"renderMode": "Tile",
+			"showName": true,
+			"tilesetId": 1,
+			"tileRenderMode": "FitInside",
+			"tileRect": { "tilesetUid": 1, "x": 80, "y": 16, "w": 16, "h": 16 },
+			"uiTileRect": null,
+			"nineSliceBorders": [],
+			"maxCount": 0,
+			"limitScope": "PerLevel",
+			"limitBehavior": "MoveLastOne",
+			"pivotX": 0,
+			"pivotY": 0,
+			"fieldDefs": []
+		},
+		{
+			"identifier": "CastleWindow",
+			"uid": 45,
+			"tags": [],
+			"exportToToc": false,
+			"allowOutOfBounds": false,
+			"doc": null,
+			"width": 16,
+			"height": 16,
+			"resizableX": false,
+			"resizableY": false,
+			"minWidth": null,
+			"maxWidth": null,
+			"minHeight": null,
+			"maxHeight": null,
+			"keepAspectRatio": false,
+			"tileOpacity": 1,
+			"fillOpacity": 0.08,
+			"lineOpacity": 0,
+			"hollow": false,
+			"color": "#3E2731",
+			"renderMode": "Tile",
+			"showName": true,
+			"tilesetId": 1,
+			"tileRenderMode": "FitInside",
+			"tileRect": { "tilesetUid": 1, "x": 64, "y": 96, "w": 16, "h": 16 },
+			"uiTileRect": null,
+			"nineSliceBorders": [],
+			"maxCount": 0,
+			"limitScope": "PerLevel",
+			"limitBehavior": "MoveLastOne",
+			"pivotX": 0,
+			"pivotY": 0,
+			"fieldDefs": []
 		}
 	], "tilesets": [
 		{
@@ -495,8 +565,8 @@
 			"customData": [],
 			"savedSelections": [],
 			"cachedPixelData": {
-				"opaqueTiles": "1111111011111111111111111111111111111111111111111111111111111111",
-				"averageColors": "fdddfdddf999faaaf555f888ffffa353fcccfbbbfcccf999fdddfcccfcccfcccfbbbfbbbfcccfcccfbbbfcccfcccfdddfcccfbbbfdddf000fcccfaaafdddfcccfbbbfbbbfbbbfbbbfdddfdddfcccfcccfbbbfbbbf657fcccfaaafdddfdddfeeefbbbfbbbf777fbbbfaaaf888fbbbfbbbfdddfcccfcccfaaafbbcfaaaf888ffff"
+				"opaqueTiles": "1111111011111011111111111111111111111111111111111111111111111111",
+				"averageColors": "fdddfdddf999faaaf555f888ffffa464fcccfbbbfcccf999fddd8888fcccfcccfbbbfbbbfcccfcccfbbbfcccfcccfdddfcccfbbbfdddf000fcccfaaafdddfcccfbbbfbbbfbbbfbbbfdddfdddfcccfcccfbbbfbbbf657fcccfaaafdddfdddfeeefbbbfbbbf777fbbbfaaaf888fbbbfbbbfdddfcccfcccfaaafbbcfaaaf888ffff"
 			}
 		},
 		{
@@ -1295,6 +1365,22 @@
 							"fieldInstances": [],
 							"__worldX": 80,
 							"__worldY": 96
+						},
+						{
+							"__identifier": "CastleWindow",
+							"__grid": [10,2],
+							"__pivot": [0,0],
+							"__tags": [],
+							"__tile": { "tilesetUid": 1, "x": 64, "y": 96, "w": 16, "h": 16 },
+							"__smartColor": "#3E2731",
+							"iid": "b8e03ac0-1030-11f0-b4ae-4308a505383a",
+							"width": 16,
+							"height": 16,
+							"defUid": 45,
+							"px": [160,32],
+							"fieldInstances": [],
+							"__worldX": 160,
+							"__worldY": 32
 						}
 					]
 				},
@@ -1483,22 +1569,6 @@
 							}] }],
 							"__worldX": 96,
 							"__worldY": 208
-						},
-						{
-							"__identifier": "Ramp",
-							"__grid": [11,2],
-							"__pivot": [0,0],
-							"__tags": [],
-							"__tile": { "tilesetUid": 1, "x": 48, "y": 32, "w": 16, "h": 16 },
-							"__smartColor": "#EAD4AA",
-							"iid": "eaf387b0-1030-11f0-b4ae-4d4495f88bcf",
-							"width": 16,
-							"height": 16,
-							"defUid": 39,
-							"px": [176,32],
-							"fieldInstances": [{ "__identifier": "Direction", "__type": "LocalEnum.Direction", "__value": "North", "__tile": null, "defUid": 40, "realEditorValues": [] }],
-							"__worldX": 176,
-							"__worldY": 32
 						},
 						{
 							"__identifier": "Ramp",
@@ -1888,7 +1958,24 @@
 					"seed": 7203334,
 					"overrideTilesetUid": null,
 					"gridTiles": [],
-					"entityInstances": []
+					"entityInstances": [
+						{
+							"__identifier": "Parapet",
+							"__grid": [10,2],
+							"__pivot": [0,0],
+							"__tags": [],
+							"__tile": { "tilesetUid": 1, "x": 80, "y": 16, "w": 16, "h": 16 },
+							"__smartColor": "#733E39",
+							"iid": "de398a10-1030-11f0-b4ae-cfd867dc0a8d",
+							"width": 16,
+							"height": 16,
+							"defUid": 44,
+							"px": [160,32],
+							"fieldInstances": [],
+							"__worldX": 160,
+							"__worldY": 32
+						}
+					]
 				},
 				{
 					"__identifier": "Ramps_0",

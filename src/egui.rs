@@ -9,9 +9,8 @@ use egui_ratatui::RataguiBackend;
 use ratatui::Terminal;
 
 use crate::{
-    animation::GridAnimated,
     camera::{BackgroundCamera, PlayerCamera, WorldCamera},
-    grid::GridPosition,
+    grid::{GridDirection, GridPosition},
     widgets::debug_frame::debug_frame,
     Flags,
 };
@@ -42,7 +41,7 @@ fn draw_scene_system(
     player_widget: Query<&RatatuiCameraWidget, With<PlayerCamera>>,
     world_widget: Query<&RatatuiCameraWidget, With<WorldCamera>>,
     background_widget: Query<&RatatuiCameraWidget, With<BackgroundCamera>>,
-    player: Query<(&GridPosition, &Transform, &GridAnimated), With<PlayerCamera>>,
+    player: Query<(&GridPosition, &GridDirection), With<PlayerCamera>>,
     flags: Res<Flags>,
     diagnostics: Res<DiagnosticsStore>,
     kitty_enabled: Option<Res<KittyEnabled>>,

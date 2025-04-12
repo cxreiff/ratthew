@@ -16,9 +16,8 @@ use bevy_ratatui::RatatuiPlugins;
 use bevy_ratatui_camera::RatatuiCameraWidget;
 use crossterm::event::KeyEventKind;
 
-use crate::animation::GridAnimated;
 use crate::camera::{BackgroundCamera, PlayerCamera, WorldCamera};
-use crate::grid::GridPosition;
+use crate::grid::{GridDirection, GridPosition};
 use crate::widgets::debug_frame::debug_frame;
 use crate::Flags;
 use crate::GameStates;
@@ -51,7 +50,7 @@ fn draw_scene_system(
     player_widget: Query<&RatatuiCameraWidget, With<PlayerCamera>>,
     world_widget: Query<&RatatuiCameraWidget, With<WorldCamera>>,
     background_widget: Query<&RatatuiCameraWidget, With<BackgroundCamera>>,
-    player: Query<(&GridPosition, &Transform, &GridAnimated), With<PlayerCamera>>,
+    player: Query<(&GridPosition, &GridDirection), With<PlayerCamera>>,
     flags: Res<Flags>,
     diagnostics: Res<DiagnosticsStore>,
     kitty_enabled: Option<Res<KittyEnabled>>,

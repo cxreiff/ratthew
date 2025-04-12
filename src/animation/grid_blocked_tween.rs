@@ -9,7 +9,7 @@ use bevy_tween::{
 
 use crate::grid::GridPosition;
 
-use super::{animation_trait::AutoTween, grid_animated_transform};
+use super::{auto_tween_trait::AutoTween, grid_animated_transform};
 
 #[derive(Component, Clone, Debug, Default)]
 pub struct GridMoveBlockedTween {

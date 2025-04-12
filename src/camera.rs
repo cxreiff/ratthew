@@ -54,8 +54,8 @@ fn setup_camera_system(
                 bg_color_scale: 0.3,
                 ..default()
             }),
-            GridPosition(IVec3::new(13, 1, 8)),
-            GridDirection(Direction::South),
+            GridPosition(IVec3::new(4, 1, 9)),
+            GridDirection(Direction::North),
             GridAnimated::default(),
         ))
         .with_children(|parent| {
@@ -84,6 +84,7 @@ fn setup_camera_system(
                 RatatuiCamera::default(),
                 RatatuiCameraStrategy::Luminance(LuminanceConfig {
                     luminance_characters: LuminanceConfig::LUMINANCE_CHARACTERS_MISC.into(),
+                    bg_color_scale: 0.2,
                     ..default()
                 }),
                 RatatuiCameraEdgeDetection::default(),
@@ -126,11 +127,11 @@ fn setup_camera_system(
                 }),
                 RatatuiCamera::default(),
                 RatatuiCameraStrategy::Luminance(LuminanceConfig {
+                    bg_color_scale: 0.4,
                     luminance_characters: LuminanceConfig::LUMINANCE_CHARACTERS_MISC.into(),
                     luminance_scale: 4.,
                     ..default()
                 }),
-                RatatuiCameraEdgeDetection::default(),
                 Skybox {
                     image: asset_server.load("skybox.ktx2"),
                     brightness: 200.,

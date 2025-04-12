@@ -6,7 +6,7 @@ use bevy_tween::{
     prelude::{EaseKind, Repeat, RepeatStyle},
 };
 
-use super::animation_trait::AutoTween;
+use super::auto_tween_trait::AutoTween;
 
 #[derive(Component, Clone, Debug, Default)]
 pub struct ItemBobTween;

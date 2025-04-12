@@ -17,6 +17,7 @@ use bevy_hanabi::{ParticleEffect, ParticleEffectBundle};
 use image::DynamicImage;
 
 use crate::{
+    camera::PlayerCamera,
     grid::{Direction, GridDirection, GridPosition},
     levels::layer::LayerData,
     particles::GradientEffect,
@@ -40,7 +41,7 @@ pub(super) fn plugin(app: &mut App) {
         .add_systems(OnEnter(GameStates::Playing), initial_load_system)
         .add_systems(
             Update,
-            level_load_system.run_if(in_state(GameStates::Playing)),
+            (level_load_system, billboard_movement_system).run_if(in_state(GameStates::Playing)),
         )
         .add_observer(level_load_observer);
 }
@@ -370,6 +371,29 @@ fn spawn_billboard<T>(
                 RenderLayers::layer(1),
             ))
             .insert(markers.clone());
+    }
+}
+
+fn billboard_movement_system(
+    player_camera: Query<&Transform, (With<PlayerCamera>, Changed<Transform>)>,
+    mut billboards: Query<
+        (&mut Transform, &mut Visibility),
+        (Without<PlayerCamera>, With<Billboard>),
+    >,
+) {
+    if let Ok(camera_transform) = player_camera.get_single() {
+        for (mut billboard_transform, mut visibility) in &mut billboards {
+            let camera_translation_y_aligned = camera_transform
+                .translation
+                .with_y(billboard_transform.translation.y);
+            billboard_transform.look_at(camera_translation_y_aligned, Vec3::Y);
+
+            if camera_translation_y_aligned.distance(billboard_transform.translation) < 0.1 {
+                *visibility = Visibility::Hidden;
+            } else {
+                *visibility = Visibility::Inherited;
+            }
+        }
     }
 }
 
