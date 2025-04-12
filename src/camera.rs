@@ -24,6 +24,9 @@ pub struct PlayerCamera;
 pub struct WorldCamera;
 
 #[derive(Component)]
+pub struct BackgroundCamera;
+
+#[derive(Component)]
 pub struct Sword;
 
 #[derive(Resource, Default, Deref, DerefMut, Debug)]
@@ -37,9 +40,10 @@ fn setup_camera_system(
 ) {
     commands
         .spawn((
+            PlayerCamera,
             RenderLayers::layer(0),
             Camera {
-                order: 1,
+                order: 2,
                 clear_color: ClearColorConfig::Custom(Color::srgba(0., 0., 0., 0.)),
                 ..default()
             },
@@ -50,7 +54,6 @@ fn setup_camera_system(
                 bg_color_scale: 0.3,
                 ..default()
             }),
-            PlayerCamera,
             GridPosition(IVec3::new(13, 1, 8)),
             GridDirection(Direction::South),
             GridAnimated::default(),
@@ -66,8 +69,14 @@ fn setup_camera_system(
             ));
 
             parent.spawn((
+                WorldCamera,
                 RenderLayers::layer(1),
                 Camera3d::default(),
+                Camera {
+                    order: 1,
+                    clear_color: ClearColorConfig::Custom(Color::srgba(0., 0., 0., 0.)),
+                    ..default()
+                },
                 Projection::from(PerspectiveProjection {
                     fov: 70.0_f32.to_radians(),
                     ..default()
@@ -78,12 +87,6 @@ fn setup_camera_system(
                     ..default()
                 }),
                 RatatuiCameraEdgeDetection::default(),
-                WorldCamera,
-                Skybox {
-                    image: asset_server.load("skybox.ktx2"),
-                    brightness: 200.,
-                    ..default()
-                },
             ));
             if let Some(gltf) = assets_gltf.get(&handles.sword) {
                 let mut sword_transform =
@@ -105,6 +108,32 @@ fn setup_camera_system(
                 PointLight {
                     intensity: 75000.,
                     shadows_enabled: true,
+                    ..default()
+                },
+            ));
+
+            parent.spawn((
+                BackgroundCamera,
+                RenderLayers::layer(2),
+                Camera3d::default(),
+                Camera {
+                    order: 0,
+                    ..default()
+                },
+                Projection::from(PerspectiveProjection {
+                    fov: 70.0_f32.to_radians(),
+                    ..default()
+                }),
+                RatatuiCamera::default(),
+                RatatuiCameraStrategy::Luminance(LuminanceConfig {
+                    luminance_characters: LuminanceConfig::LUMINANCE_CHARACTERS_MISC.into(),
+                    luminance_scale: 4.,
+                    ..default()
+                }),
+                RatatuiCameraEdgeDetection::default(),
+                Skybox {
+                    image: asset_server.load("skybox.ktx2"),
+                    brightness: 200.,
                     ..default()
                 },
             ));

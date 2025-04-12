@@ -10,7 +10,7 @@ use ratatui::Terminal;
 
 use crate::{
     animation::GridAnimated,
-    camera::{PlayerCamera, WorldCamera},
+    camera::{BackgroundCamera, PlayerCamera, WorldCamera},
     grid::GridPosition,
     widgets::debug_frame::debug_frame,
     Flags,
@@ -41,6 +41,7 @@ fn draw_scene_system(
     mut egui: EguiContexts,
     player_widget: Query<&RatatuiCameraWidget, With<PlayerCamera>>,
     world_widget: Query<&RatatuiCameraWidget, With<WorldCamera>>,
+    background_widget: Query<&RatatuiCameraWidget, With<BackgroundCamera>>,
     player: Query<(&GridPosition, &Transform, &GridAnimated), With<PlayerCamera>>,
     flags: Res<Flags>,
     diagnostics: Res<DiagnosticsStore>,
@@ -56,6 +57,9 @@ fn draw_scene_system(
             false,
         );
 
+        if let Ok(w) = background_widget.get_single() {
+            w.render_autoresize(area, frame.buffer_mut(), &mut commands);
+        }
         if let Ok(w) = world_widget.get_single() {
             w.render_autoresize(area, frame.buffer_mut(), &mut commands);
         }
