@@ -2,12 +2,12 @@ use bevy::prelude::*;
 
 use crate::{
     animation::GridAnimated,
-    levels::{RampBlock, WallBlock},
+    levels::{Collides, RampBlock},
 };
 
 use super::{
     animation::GridMoveBlocked,
-    utilities::{find_ramp_position_direction, find_wall_position},
+    utilities::{find_collider_position, find_ramp_position_direction},
     GridDirection, GridPosition, GridSystemSet,
 };
 
@@ -60,7 +60,7 @@ fn grid_movement_attempt_observer(
     trigger: Trigger<GridPositionMoveAttempt>,
     mut commands: Commands,
     grid_positions: Query<&GridPosition>,
-    walls: Query<&GridPosition, With<WallBlock>>,
+    colliders: Query<&GridPosition, With<Collides>>,
     ramps: Query<(&GridPosition, &GridDirection), With<RampBlock>>,
 ) {
     if let Ok(mover_position) = grid_positions.get(trigger.entity()) {
@@ -80,9 +80,11 @@ fn grid_movement_attempt_observer(
                 .map(|(_, ramp_direction)| *ramp_direction);
 
             let has_ramp = ramp_direction.is_some();
-            let has_wall = find_wall_position(&destination, &walls).is_some();
-            let has_wall_above = find_wall_position(&destination.up(), &walls).is_some();
-            let has_wall_below = find_wall_position(&destination.down(), &walls).is_some();
+            let has_collider = find_collider_position(&destination, &colliders).is_some();
+            let has_collider_above =
+                find_collider_position(&destination.up(), &colliders).is_some();
+            let has_collider_below =
+                find_collider_position(&destination.down(), &colliders).is_some();
 
             let destination_edge_heights =
                 destination.edge_heights(trigger.0.reverse(), ramp_direction);
@@ -90,7 +92,11 @@ fn grid_movement_attempt_observer(
             let edge_matches =
                 source_edge_heights == (destination_edge_heights.1, destination_edge_heights.0);
 
-            if edge_matches && has_wall_below && !has_wall && !(has_ramp && has_wall_above) {
+            if edge_matches
+                && has_collider_below
+                && !has_collider
+                && !(has_ramp && has_collider_above)
+            {
                 entity.trigger(GridPositionMove(destination));
                 return;
             }

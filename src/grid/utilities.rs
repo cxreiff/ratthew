@@ -1,13 +1,13 @@
-use crate::levels::{RampBlock, WallBlock};
+use crate::levels::{Collides, RampBlock};
 use bevy::prelude::*;
 
 use super::{GridDirection, GridPosition};
 
-pub fn find_wall_position<'a>(
+pub fn find_collider_position<'a>(
     position: &GridPosition,
-    walls: &'a Query<&GridPosition, With<WallBlock>>,
+    colliders: &'a Query<&GridPosition, With<Collides>>,
 ) -> Option<&'a GridPosition> {
-    walls
+    colliders
         .iter()
         .find(|wall_position| wall_position.eq(position))
 }

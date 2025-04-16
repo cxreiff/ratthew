@@ -78,6 +78,9 @@ pub struct BillboardMesh(Handle<Mesh>);
 pub struct MissingMaterial(Handle<StandardMaterial>);
 
 #[derive(Component, Debug, Clone)]
+pub struct Collides;
+
+#[derive(Component, Debug, Clone)]
 pub struct WallBlock;
 
 #[derive(Component, Debug, Clone)]
@@ -185,7 +188,7 @@ fn level_load_observer(
                             *altitude,
                             layer_data.sprite_size,
                             &instances,
-                            WallBlock,
+                            (WallBlock, Collides),
                         );
                     }
                     LayerVariant::Ramps(instances) => {
@@ -212,7 +215,7 @@ fn level_load_observer(
                             layer_data.sprite_size,
                             &instances,
                             &billboard_mesh,
-                            Billboard,
+                            (Billboard, Collides),
                         );
                     }
                 };
@@ -361,6 +364,7 @@ fn spawn_billboard<T>(
                     altitude,
                     entity.px.y / sprite_size.y,
                 )),
+                GridDirection::default(),
                 Mesh3d(billboard_mesh.0.clone()),
                 MeshMaterial3d(
                     material_map
@@ -375,24 +379,12 @@ fn spawn_billboard<T>(
 }
 
 fn billboard_movement_system(
-    player_camera: Query<&Transform, (With<PlayerCamera>, Changed<Transform>)>,
-    mut billboards: Query<
-        (&mut Transform, &mut Visibility),
-        (Without<PlayerCamera>, With<Billboard>),
-    >,
+    player_camera: Query<&GridDirection, (With<PlayerCamera>, Changed<GridDirection>)>,
+    mut billboards: Query<&mut GridDirection, (Without<PlayerCamera>, With<Billboard>)>,
 ) {
-    if let Ok(camera_transform) = player_camera.get_single() {
-        for (mut billboard_transform, mut visibility) in &mut billboards {
-            let camera_translation_y_aligned = camera_transform
-                .translation
-                .with_y(billboard_transform.translation.y);
-            billboard_transform.look_at(camera_translation_y_aligned, Vec3::Y);
-
-            if camera_translation_y_aligned.distance(billboard_transform.translation) < 0.1 {
-                *visibility = Visibility::Hidden;
-            } else {
-                *visibility = Visibility::Inherited;
-            }
+    if let Ok(camera_direction) = player_camera.get_single() {
+        for mut billboard_direction in &mut billboards {
+            *billboard_direction = camera_direction.reverse();
         }
     }
 }

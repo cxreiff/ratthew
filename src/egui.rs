@@ -4,7 +4,7 @@ use bevy::{diagnostic::DiagnosticsStore, prelude::*};
 use bevy_egui::{EguiContexts, EguiPlugin};
 use bevy_ratatui::kitty::KittyEnabled;
 use bevy_ratatui_camera::RatatuiCameraWidget;
-use egui::{CentralPanel, Frame};
+use egui::{CentralPanel, Frame, Margin};
 use egui_ratatui::RataguiBackend;
 use ratatui::Terminal;
 
@@ -27,7 +27,7 @@ struct EguiTerminal(Terminal<RataguiBackend>);
 
 impl Default for EguiTerminal {
     fn default() -> Self {
-        let mut backend = RataguiBackend::new(512, 512);
+        let mut backend = RataguiBackend::new(432, 216);
         backend.set_font_size(12);
         Self(Terminal::new(backend).unwrap())
     }
@@ -68,7 +68,12 @@ fn draw_scene_system(
     })?;
 
     CentralPanel::default()
-        .frame(Frame::none())
+        .frame(Frame::NONE.outer_margin(Margin {
+            top: 24,
+            left: 48,
+            right: 0,
+            bottom: 24,
+        }))
         .show(egui.ctx_mut(), |ui| {
             ui.add(ratagui.backend_mut());
         });

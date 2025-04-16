@@ -50,7 +50,7 @@ fn setup_camera_system(
             Camera3d::default(),
             RatatuiCamera::default(),
             RatatuiCameraStrategy::Luminance(LuminanceConfig {
-                luminance_characters: LuminanceConfig::LUMINANCE_CHARACTERS_BLOCKS.into(),
+                luminance_characters: LuminanceConfig::LUMINANCE_CHARACTERS_MISC.into(),
                 bg_color_scale: 0.3,
                 ..default()
             }),
