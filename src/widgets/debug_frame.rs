@@ -4,7 +4,8 @@ use bevy::diagnostic::{
 use bevy_ratatui::kitty::KittyEnabled;
 use ratatui::{
     layout::{Alignment, Constraint, Direction, Layout},
-    style::{Style, Stylize},
+    style::{Color, Style, Stylize},
+    text::{Line, Text},
     widgets::Block,
     Frame,
 };
@@ -23,25 +24,42 @@ pub fn debug_frame(
     player: Option<(&GridPosition, &GridDirection)>,
     show_log_panel: bool,
 ) -> ratatui::layout::Rect {
-    let mut block = Block::bordered()
+    let layout = Layout::new(
+        Direction::Vertical,
+        [Constraint::Fill(1), Constraint::Length(3)],
+    )
+    .split(frame.area());
+
+    let block = Block::bordered()
         .bg(ratatui::style::Color::Rgb(0, 0, 0))
         .border_style(Style::default().bg(ratatui::style::Color::Black))
-        .title_bottom("[esc for quit]")
-        .title_bottom("[tab for debug]")
         .title_alignment(Alignment::Center);
 
+    let controls = Line::from("[esc to quit] [tab to debug]")
+        .centered()
+        .bg(Color::Black);
+    let controls_block = Block::bordered().bg(Color::Black);
+    frame.render_widget(controls, controls_block.inner(layout[1]));
+    frame.render_widget(controls_block, layout[1]);
+
     if flags.debug {
-        let layout = Layout::new(
+        let debug_layout = Layout::new(
             Direction::Vertical,
             if show_log_panel {
-                &[Constraint::Percentage(66), Constraint::Fill(1)]
+                &[
+                    Constraint::Fill(2),
+                    Constraint::Length(3),
+                    Constraint::Fill(1),
+                ]
             } else {
-                &[Constraint::Percentage(100)] as &[Constraint]
+                &[Constraint::Fill(1), Constraint::Length(3)] as &[Constraint]
             },
         )
-        .split(frame.area());
+        .split(layout[0]);
 
-        block = block.title_top(format!(
+        let mut debug_text = vec![];
+
+        debug_text.push(format!(
             "[kitty protocol: {}]",
             if kitty_enabled.is_some() {
                 "enabled"
@@ -54,16 +72,16 @@ pub fn debug_frame(
             .get(&EntityCountDiagnosticsPlugin::ENTITY_COUNT)
             .and_then(|count| count.value())
         {
-            block = block.title_top(format!("[entities: {value}]"));
+            debug_text.push(format!("[entities: {value}]"));
         }
 
         if let Some((position, direction)) = player {
-            block = block.title_top(format!(
+            debug_text.push(format!(
                 "[xyz: {}, {}, {}]",
                 position.x, position.y, position.z
             ));
 
-            block = block.title_top(format!(
+            debug_text.push(format!(
                 "[direction: {}]",
                 format!("{:?}", direction.0).to_lowercase()
             ));
@@ -73,25 +91,32 @@ pub fn debug_frame(
             .get(&FrameTimeDiagnosticsPlugin::FPS)
             .and_then(|fps| fps.smoothed())
         {
-            block = block.title_top(format!("[fps: {value:3.0}]"));
+            debug_text.push(format!("[fps: {value:3.0}]"));
         }
 
-        let inner = block.inner(layout[0]);
-        frame.render_widget(block, layout[0]);
+        let inner = block.inner(debug_layout[0]);
+        frame.render_widget(block, debug_layout[0]);
+
+        let debug_block = Block::bordered().bg(Color::Black);
+        frame.render_widget(
+            Text::from(debug_text.join(" ")),
+            debug_block.inner(debug_layout[1]),
+        );
+        frame.render_widget(debug_block, debug_layout[1]);
 
         if show_log_panel {
             frame.render_widget(
                 TuiLoggerWidget::default()
                     .block(Block::bordered())
                     .style(Style::default().bg(ratatui::style::Color::Reset)),
-                layout[1],
+                debug_layout[2],
             );
         }
 
         inner
     } else {
-        let inner = block.inner(frame.area());
-        frame.render_widget(block, frame.area());
+        let inner = block.inner(layout[0]);
+        frame.render_widget(block, layout[0]);
 
         inner
     }

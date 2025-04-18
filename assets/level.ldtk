@@ -3223,7 +3223,24 @@
 					"seed": 2251186,
 					"overrideTilesetUid": null,
 					"gridTiles": [],
-					"entityInstances": []
+					"entityInstances": [
+						{
+							"__identifier": "parapet",
+							"__grid": [4,2],
+							"__pivot": [0,0],
+							"__tags": [],
+							"__tile": { "tilesetUid": 1, "x": 80, "y": 16, "w": 16, "h": 16 },
+							"__smartColor": "#BE4A2F",
+							"iid": "a7471da0-1030-11f0-ac3d-87e0820d7a26",
+							"width": 16,
+							"height": 16,
+							"defUid": 56,
+							"px": [64,32],
+							"fieldInstances": [],
+							"__worldX": 64,
+							"__worldY": 32
+						}
+					]
 				},
 				{
 					"__identifier": "standees_0",
@@ -3498,7 +3515,40 @@
 					"seed": 4828982,
 					"overrideTilesetUid": null,
 					"gridTiles": [],
-					"entityInstances": []
+					"entityInstances": [
+						{
+							"__identifier": "ramp",
+							"__grid": [0,2],
+							"__pivot": [0,0],
+							"__tags": [],
+							"__tile": { "tilesetUid": 1, "x": 48, "y": 16, "w": 16, "h": 16 },
+							"__smartColor": "#EAD4AA",
+							"iid": "97d62c80-1030-11f0-ac3d-271bc50f2712",
+							"width": 16,
+							"height": 16,
+							"defUid": 39,
+							"px": [0,32],
+							"fieldInstances": [{ "__identifier": "Direction", "__type": "LocalEnum.direction", "__value": "north", "__tile": null, "defUid": 40, "realEditorValues": [] }],
+							"__worldX": 0,
+							"__worldY": 32
+						},
+						{
+							"__identifier": "ramp",
+							"__grid": [15,2],
+							"__pivot": [0,0],
+							"__tags": [],
+							"__tile": { "tilesetUid": 1, "x": 48, "y": 16, "w": 16, "h": 16 },
+							"__smartColor": "#EAD4AA",
+							"iid": "987fb2f0-1030-11f0-ac3d-3149daad61e6",
+							"width": 16,
+							"height": 16,
+							"defUid": 39,
+							"px": [240,32],
+							"fieldInstances": [{ "__identifier": "Direction", "__type": "LocalEnum.direction", "__value": "north", "__tile": null, "defUid": 40, "realEditorValues": [] }],
+							"__worldX": 240,
+							"__worldY": 32
+						}
+					]
 				},
 				{
 					"__identifier": "flippedramps_0",
