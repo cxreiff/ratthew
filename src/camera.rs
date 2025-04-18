@@ -38,6 +38,11 @@ fn setup_camera_system(
     assets_gltf: Res<Assets<Gltf>>,
     asset_server: Res<AssetServer>,
 ) {
+    commands.insert_resource(AmbientLight {
+        brightness: 500.,
+        ..default()
+    });
+
     commands
         .spawn((
             PlayerCamera,
@@ -54,15 +59,15 @@ fn setup_camera_system(
                 bg_color_scale: 0.3,
                 ..default()
             }),
-            GridPosition(IVec3::new(4, 1, 9)),
-            GridDirection(Direction::North),
+            GridPosition(IVec3::new(3, 1, 7)),
+            GridDirection(Direction::South),
             GridAnimated::default(),
         ))
         .with_children(|parent| {
             parent.spawn((
                 RenderLayers::layer(0),
                 PointLight {
-                    intensity: 10000.,
+                    intensity: 15000.,
                     shadows_enabled: true,
                     ..default()
                 },
@@ -84,17 +89,20 @@ fn setup_camera_system(
                 RatatuiCamera::default(),
                 RatatuiCameraStrategy::Luminance(LuminanceConfig {
                     luminance_characters: LuminanceConfig::LUMINANCE_CHARACTERS_MISC.into(),
-                    bg_color_scale: 0.2,
+                    luminance_scale: 9.,
+                    bg_color_scale: 0.1,
                     ..default()
                 }),
-                RatatuiCameraEdgeDetection::default(),
+                RatatuiCameraEdgeDetection {
+                    color_enabled: false,
+                    ..default()
+                },
             ));
             if let Some(gltf) = assets_gltf.get(&handles.sword) {
-                let mut sword_transform =
-                    Transform::from_xyz(0.3, -0.15, -0.7).with_scale(Vec3::new(0.4, 0.4, 0.4));
-                sword_transform.rotate_local_x(-1.4);
+                let mut sword_transform = Transform::default().with_scale(Vec3::new(0.4, 0.4, 0.4));
+                sword_transform.rotate_local_x(-1.5);
                 sword_transform.rotate_local_y(0.3);
-                sword_transform.rotate_local_z(-0.15);
+                sword_transform.rotate_local_z(-0.16);
 
                 parent.spawn((
                     RenderLayers::layer(0), // setting this does not set gltf children
@@ -107,7 +115,7 @@ fn setup_camera_system(
             parent.spawn((
                 RenderLayers::layer(1),
                 PointLight {
-                    intensity: 75000.,
+                    intensity: 70000.,
                     shadows_enabled: true,
                     ..default()
                 },

@@ -25,8 +25,8 @@ use crate::{
 };
 
 use super::{
-    layer::LayerVariant, upright_billboard::UprightBillboard, upright_cube::UprightCube,
-    upright_ramp::UprightRamp,
+    flipped_ramp::FlippedRamp, layer::LayerVariant, upright_billboard::UprightBillboard,
+    upright_cube::UprightCube, upright_ramp::UprightRamp,
 };
 
 pub(super) fn plugin(app: &mut App) {
@@ -43,7 +43,8 @@ pub(super) fn plugin(app: &mut App) {
             Update,
             (level_load_system, billboard_movement_system).run_if(in_state(GameStates::Playing)),
         )
-        .add_observer(level_load_observer);
+        .add_observer(level_load_observer)
+        .add_observer(billboard_setup_observer);
 }
 
 #[derive(AssetCollection, Resource)]
@@ -72,6 +73,9 @@ pub struct UprightCubeMesh(Handle<Mesh>);
 pub struct RampMesh(Handle<Mesh>);
 
 #[derive(Resource, Debug, Clone, Deref, DerefMut)]
+pub struct FlippedRampMesh(Handle<Mesh>);
+
+#[derive(Resource, Debug, Clone, Deref, DerefMut)]
 pub struct BillboardMesh(Handle<Mesh>);
 
 #[derive(Resource, Debug, Clone, Deref, DerefMut)]
@@ -90,6 +94,9 @@ pub struct RampBlock;
 #[derive(Component, Debug, Clone)]
 pub struct Billboard;
 
+#[derive(Component, Debug, Clone)]
+pub struct Standee;
+
 fn level_load_setup_system(
     mut commands: Commands,
     mut meshes: ResMut<Assets<Mesh>>,
@@ -97,6 +104,7 @@ fn level_load_setup_system(
 ) {
     commands.insert_resource(UprightCubeMesh(meshes.add(UprightCube)));
     commands.insert_resource(RampMesh(meshes.add(UprightRamp)));
+    commands.insert_resource(FlippedRampMesh(meshes.add(FlippedRamp)));
     commands.insert_resource(BillboardMesh(meshes.add(UprightBillboard)));
     commands.insert_resource(MissingMaterial(
         materials.add(StandardMaterial::from(Color::srgb(1., 0., 0.))),
@@ -140,6 +148,7 @@ fn level_load_observer(
     particle_handle: Res<GradientEffect>,
     upright_cube_mesh: Res<UprightCubeMesh>,
     ramp_mesh: Res<RampMesh>,
+    flipped_ramp_mesh: Res<FlippedRampMesh>,
     billboard_mesh: Res<BillboardMesh>,
     missing_material: Res<MissingMaterial>,
 ) {
@@ -201,7 +210,22 @@ fn level_load_observer(
                             *altitude,
                             layer_data.sprite_size,
                             &instances,
-                            &ramp_mesh,
+                            ramp_mesh.0.clone(),
+                            RampBlock,
+                        );
+                    }
+                    LayerVariant::FlippedRamps(instances) => {
+                        spawn_layer_ramps(
+                            commands.reborrow(),
+                            &mut materials,
+                            &mut images,
+                            &mut tileset,
+                            &missing_material,
+                            *altitude,
+                            layer_data.sprite_size,
+                            &instances,
+                            flipped_ramp_mesh.0.clone(),
+                            Collides,
                         );
                     }
                     LayerVariant::Billboards(instances) => {
@@ -216,6 +240,20 @@ fn level_load_observer(
                             &instances,
                             &billboard_mesh,
                             (Billboard, Collides),
+                        );
+                    }
+                    LayerVariant::Standees(instances) => {
+                        spawn_billboard(
+                            commands.reborrow(),
+                            &mut materials,
+                            &mut images,
+                            &mut tileset,
+                            &missing_material,
+                            *altitude,
+                            layer_data.sprite_size,
+                            &instances,
+                            &billboard_mesh,
+                            (Standee, Collides),
                         );
                     }
                 };
@@ -288,7 +326,7 @@ fn spawn_layer_entities(
     }
 }
 
-fn spawn_layer_ramps(
+fn spawn_layer_ramps<T>(
     mut commands: Commands,
     materials: &mut ResMut<Assets<StandardMaterial>>,
     images: &mut ResMut<Assets<Image>>,
@@ -297,8 +335,11 @@ fn spawn_layer_ramps(
     altitude: i32,
     sprite_size: IVec2,
     instances: &[EntityInstance],
-    ramp_mesh: &RampMesh,
-) {
+    ramp_mesh: Handle<Mesh>,
+    markers: T,
+) where
+    T: Clone + Bundle,
+{
     let material_map = generate_ldtk_entity_material_map(materials, images, tileset, instances);
 
     for entity in instances.iter() {
@@ -314,24 +355,26 @@ fn spawn_layer_ramps(
             _ => unreachable!(),
         };
 
-        commands.spawn((
-            SpawnedFromLdtk,
-            GridPosition(IVec3::new(
-                entity.px.x / sprite_size.y,
-                altitude,
-                entity.px.y / sprite_size.y,
-            )),
-            GridDirection(direction),
-            Mesh3d(ramp_mesh.0.clone()),
-            MeshMaterial3d(
-                material_map
-                    .get(&(tile.x, tile.y))
-                    .unwrap_or(missing_material)
-                    .clone(),
-            ),
-            RenderLayers::layer(1),
-            RampBlock,
-        ));
+        commands
+            .spawn((
+                SpawnedFromLdtk,
+                GridPosition(IVec3::new(
+                    entity.px.x / sprite_size.y,
+                    altitude,
+                    entity.px.y / sprite_size.y,
+                )),
+                GridDirection(direction),
+                Mesh3d(ramp_mesh.clone()),
+                MeshMaterial3d(
+                    material_map
+                        .get(&(tile.x, tile.y))
+                        .unwrap_or(missing_material)
+                        .clone(),
+                ),
+                RenderLayers::layer(1),
+                RampBlock,
+            ))
+            .insert(markers.clone());
     }
 }
 
@@ -376,6 +419,21 @@ fn spawn_billboard<T>(
             ))
             .insert(markers.clone());
     }
+}
+
+fn billboard_setup_observer(
+    trigger: Trigger<OnInsert, Billboard>,
+    player_camera: Query<&GridDirection, With<PlayerCamera>>,
+    mut billboards: Query<&mut GridDirection, (Without<PlayerCamera>, With<Billboard>)>,
+) {
+    let Ok(camera_direction) = player_camera.get_single() else {
+        return;
+    };
+    let Ok(mut billboard_direction) = billboards.get_mut(trigger.entity()) else {
+        return;
+    };
+
+    *billboard_direction = camera_direction.reverse();
 }
 
 fn billboard_movement_system(
