@@ -10,7 +10,6 @@ mod animation;
 mod camera;
 mod grid;
 mod levels;
-mod particles;
 mod widgets;
 
 #[cfg(not(feature = "egui"))]
@@ -61,7 +60,6 @@ pub fn plugin(app: &mut App) {
         EntityCountDiagnosticsPlugin,
         animation::plugin,
         camera::plugin,
-        particles::plugin,
         levels::plugin,
         grid::plugin,
         #[cfg(not(feature = "egui"))]

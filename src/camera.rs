@@ -60,7 +60,7 @@ fn setup_camera_system(
                 ..default()
             }),
             GridPosition(IVec3::new(3, 1, 7)),
-            GridDirection(Direction::South),
+            GridDirection(Direction::North),
             GridAnimated::default(),
         ))
         .with_children(|parent| {

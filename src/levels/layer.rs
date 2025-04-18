@@ -15,7 +15,7 @@ pub struct LayerData {
 
 #[derive(Debug, Clone)]
 pub enum LayerVariant {
-    Particles(Vec<EntityInstance>),
+    Torches(Vec<EntityInstance>),
     Walls(Vec<TileInstance>),
     Ramps(Vec<EntityInstance>),
     FlippedRamps(Vec<EntityInstance>),
@@ -38,23 +38,23 @@ impl TryFrom<&LayerInstance> for LayerData {
 
         let variant = match value.layer_instance_type {
             ldtk::Type::Entities => match variant_str {
-                "Particles" => LayerVariant::Particles(value.entity_instances.clone()),
-                "Ramps" => LayerVariant::Ramps(value.entity_instances.clone()),
-                "FlippedRamps" => LayerVariant::FlippedRamps(value.entity_instances.clone()),
-                "Billboards" => LayerVariant::Billboards(value.entity_instances.clone()),
-                "Standees" => LayerVariant::Standees(value.entity_instances.clone()),
+                "torches" => LayerVariant::Torches(value.entity_instances.clone()),
+                "ramps" => LayerVariant::Ramps(value.entity_instances.clone()),
+                "flippedramps" => LayerVariant::FlippedRamps(value.entity_instances.clone()),
+                "billboards" => LayerVariant::Billboards(value.entity_instances.clone()),
+                "standees" => LayerVariant::Standees(value.entity_instances.clone()),
                 _ => return Err(ParseLayerError::Variant(variant_str.into())),
             },
             ldtk::Type::AutoLayer => match variant_str {
-                "Walls" => LayerVariant::Walls(value.auto_layer_tiles.clone()),
+                "walls" => LayerVariant::Walls(value.auto_layer_tiles.clone()),
                 _ => return Err(ParseLayerError::Variant(variant_str.into())),
             },
             ldtk::Type::IntGrid => match variant_str {
-                "Walls" => LayerVariant::Walls(value.auto_layer_tiles.clone()),
+                "walls" => LayerVariant::Walls(value.auto_layer_tiles.clone()),
                 _ => return Err(ParseLayerError::Variant(variant_str.into())),
             },
             ldtk::Type::Tiles => match variant_str {
-                "Walls" => LayerVariant::Walls(value.grid_tiles.clone()),
+                "walls" => LayerVariant::Walls(value.grid_tiles.clone()),
                 _ => return Err(ParseLayerError::Variant(variant_str.into())),
             },
         };

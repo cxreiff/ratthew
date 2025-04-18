@@ -20,13 +20,12 @@ use crate::{
     camera::PlayerCamera,
     grid::{Direction, GridDirection, GridPosition},
     levels::layer::LayerData,
-    particles::GradientEffect,
     GameStates,
 };
 
 use super::{
-    flipped_ramp::FlippedRamp, layer::LayerVariant, upright_billboard::UprightBillboard,
-    upright_cube::UprightCube, upright_ramp::UprightRamp,
+    flipped_ramp::FlippedRamp, layer::LayerVariant, torch_effect::TorchEffect,
+    upright_billboard::UprightBillboard, upright_cube::UprightCube, upright_ramp::UprightRamp,
 };
 
 pub(super) fn plugin(app: &mut App) {
@@ -51,7 +50,7 @@ pub(super) fn plugin(app: &mut App) {
 pub struct GameAssets {
     #[asset(path = "level.ldtk")]
     level: Handle<LdtkProject>,
-    #[asset(path = "1bit.png")]
+    #[asset(path = "sprites.png")]
     tileset: Handle<Image>,
     #[asset(path = "sword.glb")]
     pub sword: Handle<Gltf>,
@@ -79,7 +78,13 @@ pub struct FlippedRampMesh(Handle<Mesh>);
 pub struct BillboardMesh(Handle<Mesh>);
 
 #[derive(Resource, Debug, Clone, Deref, DerefMut)]
+pub struct TorchMesh(Handle<Mesh>);
+
+#[derive(Resource, Debug, Clone, Deref, DerefMut)]
 pub struct MissingMaterial(Handle<StandardMaterial>);
+
+#[derive(Resource, Debug, Clone, Deref, DerefMut)]
+pub struct TorchMaterial(Handle<StandardMaterial>);
 
 #[derive(Component, Debug, Clone)]
 pub struct Collides;
@@ -106,8 +111,12 @@ fn level_load_setup_system(
     commands.insert_resource(RampMesh(meshes.add(UprightRamp)));
     commands.insert_resource(FlippedRampMesh(meshes.add(FlippedRamp)));
     commands.insert_resource(BillboardMesh(meshes.add(UprightBillboard)));
+    commands.insert_resource(TorchMesh(meshes.add(Cylinder::new(0.03, 0.4))));
     commands.insert_resource(MissingMaterial(
         materials.add(StandardMaterial::from(Color::srgb(1., 0., 0.))),
+    ));
+    commands.insert_resource(TorchMaterial(
+        materials.add(StandardMaterial::from(Color::srgb(0.6, 0.4, 0.3))),
     ));
 }
 
@@ -145,12 +154,14 @@ fn level_load_observer(
     spawned_from_ldtk: Query<Entity, With<SpawnedFromLdtk>>,
     ldtk_material_maps: Query<(Entity, &LdtkTilesetMaterials)>,
     ldtk_assets: Res<Assets<LdtkProject>>,
-    particle_handle: Res<GradientEffect>,
+    particle_handle: Res<TorchEffect>,
     upright_cube_mesh: Res<UprightCubeMesh>,
     ramp_mesh: Res<RampMesh>,
     flipped_ramp_mesh: Res<FlippedRampMesh>,
     billboard_mesh: Res<BillboardMesh>,
+    torch_mesh: Res<TorchMesh>,
     missing_material: Res<MissingMaterial>,
+    torch_material: Res<TorchMaterial>,
 ) {
     let tileset = images.get(&handles.tileset).unwrap();
     let mut tileset = tileset.clone().try_into_dynamic().unwrap();
@@ -177,10 +188,12 @@ fn level_load_observer(
                 };
 
                 match layer_data.variant {
-                    LayerVariant::Particles(instances) => {
-                        spawn_layer_entities(
+                    LayerVariant::Torches(instances) => {
+                        spawn_layer_torches(
                             commands.reborrow(),
                             &particle_handle,
+                            &torch_mesh,
+                            &torch_material,
                             *altitude,
                             layer_data.sprite_size,
                             &instances,
@@ -302,27 +315,36 @@ pub fn spawn_layer_walls<T>(
     commands.spawn(material_map);
 }
 
-fn spawn_layer_entities(
+fn spawn_layer_torches(
     mut commands: Commands,
-    particle_handle: &Res<GradientEffect>,
+    particle_handle: &Res<TorchEffect>,
+    torch_mesh: &Handle<Mesh>,
+    torch_material: &Handle<StandardMaterial>,
     altitude: i32,
     sprite_size: IVec2,
     instances: &[EntityInstance],
 ) {
     for entity in instances.iter() {
-        commands.spawn((
-            SpawnedFromLdtk,
-            GridPosition(IVec3::new(
-                entity.px.x / sprite_size.y,
-                altitude,
-                entity.px.y / sprite_size.y,
-            )),
-            ParticleEffectBundle {
-                effect: ParticleEffect::new(particle_handle.0.clone()),
-                ..Default::default()
-            },
-            RenderLayers::layer(1),
-        ));
+        commands
+            .spawn((
+                SpawnedFromLdtk,
+                GridPosition(IVec3::new(
+                    entity.px.x / sprite_size.y,
+                    altitude,
+                    entity.px.y / sprite_size.y,
+                )),
+                ParticleEffectBundle {
+                    effect: ParticleEffect::new(particle_handle.0.clone()),
+                    ..Default::default()
+                },
+                RenderLayers::layer(1),
+            ))
+            .with_child((
+                RenderLayers::layer(1),
+                Mesh3d(torch_mesh.clone()),
+                MeshMaterial3d(torch_material.clone()),
+                Transform::from_xyz(0., -0.25, 0.),
+            ));
     }
 }
 
@@ -348,10 +370,10 @@ fn spawn_layer_ramps<T>(
         };
 
         let direction = match entity.get_enum_field("Direction").unwrap().deref() {
-            "North" => Direction::North,
-            "East" => Direction::East,
-            "South" => Direction::South,
-            "West" => Direction::West,
+            "north" => Direction::North,
+            "east" => Direction::East,
+            "south" => Direction::South,
+            "west" => Direction::West,
             _ => unreachable!(),
         };
 
@@ -399,6 +421,11 @@ fn spawn_billboard<T>(
             continue;
         };
 
+        let tile_material = material_map
+            .get(&(tile.x, tile.y))
+            .unwrap_or(missing_material)
+            .clone();
+
         commands
             .spawn((
                 SpawnedFromLdtk,
@@ -409,12 +436,7 @@ fn spawn_billboard<T>(
                 )),
                 GridDirection::default(),
                 Mesh3d(billboard_mesh.0.clone()),
-                MeshMaterial3d(
-                    material_map
-                        .get(&(tile.x, tile.y))
-                        .unwrap_or(missing_material)
-                        .clone(),
-                ),
+                MeshMaterial3d(tile_material),
                 RenderLayers::layer(1),
             ))
             .insert(markers.clone());
@@ -512,7 +534,7 @@ fn generate_spritesheet_material_entity(
     materials.add(StandardMaterial {
         reflectance: 0.,
         perceptual_roughness: 1.0,
-        alpha_mode: AlphaMode::Mask(0.1),
+        alpha_mode: AlphaMode::AlphaToCoverage,
         base_color_texture: Some(images.add(Image::from_dynamic(
             tileset.crop(tile.x as u32, tile.y as u32, 16, 16),
             true,
