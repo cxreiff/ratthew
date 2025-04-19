@@ -3,10 +3,10 @@ use bevy::diagnostic::{
 };
 use bevy_ratatui::kitty::KittyEnabled;
 use ratatui::{
-    layout::{Alignment, Constraint, Direction, Layout},
+    layout::{Constraint, Direction, Layout},
     style::{Color, Style, Stylize},
-    text::{Line, Text},
-    widgets::Block,
+    text::Line,
+    widgets::{Block, Borders, Padding},
     Frame,
 };
 use tui_logger::TuiLoggerWidget;
@@ -24,43 +24,84 @@ pub fn debug_frame(
     player: Option<(&GridPosition, &GridDirection)>,
     show_log_panel: bool,
 ) -> ratatui::layout::Rect {
+    let main_block = Block::bordered()
+        .bg(Color::Rgb(0, 0, 0))
+        .border_style(Style::default().bg(ratatui::style::Color::Black));
+    let undertab_block = Block::default()
+        .borders(Borders::LEFT | Borders::BOTTOM | Borders::RIGHT)
+        .padding(Padding::horizontal(2))
+        .bg(Color::Black);
+
     let layout = Layout::new(
         Direction::Vertical,
-        [Constraint::Fill(1), Constraint::Length(3)],
+        [Constraint::Fill(1), Constraint::Length(2)],
     )
     .split(frame.area());
 
-    let block = Block::bordered()
-        .bg(ratatui::style::Color::Rgb(0, 0, 0))
-        .border_style(Style::default().bg(ratatui::style::Color::Black))
-        .title_alignment(Alignment::Center);
+    let name_string = "ratthew";
+    let name_line = Line::from(name_string).centered();
+    let name_block = undertab_block.clone();
 
-    let controls = Line::from("[esc to quit] [tab to debug]")
-        .centered()
-        .bg(Color::Black);
-    let controls_block = Block::bordered().bg(Color::Black);
-    frame.render_widget(controls, controls_block.inner(layout[1]));
-    frame.render_widget(controls_block, layout[1]);
+    let controls_string =
+        ["WASD to move", "Q/E to turn", "ESC to quit", "TAB to debug"].join("  |  ");
+    let controls_line = Line::from(controls_string.clone()).centered();
+    let controls_block = undertab_block.clone();
+
+    let bottom_area = Layout::new(
+        Direction::Horizontal,
+        [
+            Constraint::Length(name_string.len() as u16 + 8),
+            Constraint::Fill(1),
+            Constraint::Length(controls_string.len() as u16 + 8),
+        ],
+    )
+    .split(layout[1]);
+    frame.render_widget(name_line, name_block.inner(bottom_area[0]));
+    frame.render_widget(name_block, bottom_area[0]);
+    frame.render_widget(undertab_block.clone(), bottom_area[1]);
+    frame.render_widget(controls_line, controls_block.inner(bottom_area[2]));
+    frame.render_widget(controls_block, bottom_area[2]);
 
     if flags.debug {
         let debug_layout = Layout::new(
             Direction::Vertical,
-            if show_log_panel {
-                &[
-                    Constraint::Fill(2),
-                    Constraint::Length(3),
-                    Constraint::Fill(1),
-                ]
-            } else {
-                &[Constraint::Fill(1), Constraint::Length(3)] as &[Constraint]
-            },
+            [
+                Constraint::Fill(2),
+                Constraint::Fill(if show_log_panel { 1 } else { 0 }),
+                Constraint::Length(2),
+            ],
         )
         .split(layout[0]);
 
-        let mut debug_text = vec![];
+        let inner = main_block.inner(debug_layout[0]);
+        frame.render_widget(main_block, debug_layout[0]);
 
-        debug_text.push(format!(
-            "[kitty protocol: {}]",
+        if show_log_panel {
+            frame.render_widget(
+                TuiLoggerWidget::default()
+                    .block(undertab_block.clone().padding(Padding::uniform(1)))
+                    .style(Style::default().bg(ratatui::style::Color::Reset)),
+                debug_layout[1],
+            );
+        }
+
+        let mut debug_strings_left = vec![];
+        let mut debug_strings_right = vec![];
+
+        if let Some((position, direction)) = player {
+            debug_strings_left.push(format!(
+                "xyz: {}, {}, {}",
+                position.x, position.y, position.z
+            ));
+
+            debug_strings_left.push(format!(
+                "direction: {}",
+                format!("{:?}", direction.0).to_lowercase()
+            ));
+        }
+
+        debug_strings_right.push(format!(
+            "kitty protocol: {}",
             if kitty_enabled.is_some() {
                 "enabled"
             } else {
@@ -72,51 +113,42 @@ pub fn debug_frame(
             .get(&EntityCountDiagnosticsPlugin::ENTITY_COUNT)
             .and_then(|count| count.value())
         {
-            debug_text.push(format!("[entities: {value}]"));
-        }
-
-        if let Some((position, direction)) = player {
-            debug_text.push(format!(
-                "[xyz: {}, {}, {}]",
-                position.x, position.y, position.z
-            ));
-
-            debug_text.push(format!(
-                "[direction: {}]",
-                format!("{:?}", direction.0).to_lowercase()
-            ));
+            debug_strings_right.push(format!("entities: {value}"));
         }
 
         if let Some(value) = diagnostics
             .get(&FrameTimeDiagnosticsPlugin::FPS)
             .and_then(|fps| fps.smoothed())
         {
-            debug_text.push(format!("[fps: {value:3.0}]"));
+            debug_strings_right.push(format!("fps: {value:3.0}"));
         }
 
-        let inner = block.inner(debug_layout[0]);
-        frame.render_widget(block, debug_layout[0]);
+        let debug_string_left = debug_strings_left.join("  |  ");
+        let debug_string_right = debug_strings_right.join("  |  ");
 
-        let debug_block = Block::bordered().bg(Color::Black);
-        frame.render_widget(
-            Text::from(debug_text.join(" ")),
-            debug_block.inner(debug_layout[1]),
-        );
-        frame.render_widget(debug_block, debug_layout[1]);
+        let debug_line_layout = Layout::new(
+            Direction::Horizontal,
+            [
+                Constraint::Length(debug_string_left.len() as u16 + 8),
+                Constraint::Fill(1),
+                Constraint::Length(debug_string_right.len() as u16 + 8),
+            ],
+        )
+        .split(debug_layout[2]);
 
-        if show_log_panel {
-            frame.render_widget(
-                TuiLoggerWidget::default()
-                    .block(Block::bordered())
-                    .style(Style::default().bg(ratatui::style::Color::Reset)),
-                debug_layout[2],
-            );
-        }
+        let debug_line_left = Line::from(debug_string_left).centered();
+        let debug_line_right = Line::from(debug_string_right).centered();
+
+        frame.render_widget(debug_line_left, undertab_block.inner(debug_line_layout[0]));
+        frame.render_widget(undertab_block.clone(), debug_line_layout[0]);
+        frame.render_widget(undertab_block.clone(), debug_line_layout[1]);
+        frame.render_widget(debug_line_right, undertab_block.inner(debug_line_layout[2]));
+        frame.render_widget(undertab_block.clone(), debug_line_layout[2]);
 
         inner
     } else {
-        let inner = block.inner(layout[0]);
-        frame.render_widget(block, layout[0]);
+        let inner = main_block.inner(layout[0]);
+        frame.render_widget(main_block, layout[0]);
 
         inner
     }
