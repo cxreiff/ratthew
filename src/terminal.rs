@@ -121,8 +121,7 @@ pub fn temporary_terminal_forward_system(
             crossterm::event::KeyCode::Char('a') => send_key('a', KeyCode::KeyA),
             crossterm::event::KeyCode::Char('q') => send_key('q', KeyCode::KeyQ),
             crossterm::event::KeyCode::Char('e') => send_key('e', KeyCode::KeyE),
-            crossterm::event::KeyCode::Char('o') => send_key('o', KeyCode::KeyO),
-            crossterm::event::KeyCode::Char('p') => send_key('p', KeyCode::KeyP),
+            crossterm::event::KeyCode::Char('m') => send_key('m', KeyCode::KeyM),
             crossterm::event::KeyCode::Tab => send_key('t', KeyCode::Tab),
             crossterm::event::KeyCode::Esc => send_key('x', KeyCode::Escape),
             _ => {}

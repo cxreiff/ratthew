@@ -3,6 +3,8 @@ use bevy::log::LogPlugin;
 use bevy::prelude::*;
 use bevy::window::WindowMode;
 use bevy::winit::WinitPlugin;
+use bevy_rand::plugin::EntropyPlugin;
+use bevy_rand::prelude::WyRand;
 use bevy_ratatui_camera::RatatuiCameraPlugin;
 use bevy_tween::DefaultTweenPlugins;
 
@@ -10,6 +12,8 @@ mod animation;
 mod camera;
 mod grid;
 mod levels;
+mod loading;
+mod sound;
 mod widgets;
 
 #[cfg(not(feature = "egui"))]
@@ -24,6 +28,7 @@ pub struct Cube;
 #[derive(Resource, Default)]
 pub struct Flags {
     debug: bool,
+    sound: bool,
 }
 
 #[derive(Default, States, Clone, Debug, Hash, Eq, PartialEq)]
@@ -58,16 +63,23 @@ pub fn plugin(app: &mut App) {
         RatatuiCameraPlugin,
         FrameTimeDiagnosticsPlugin,
         EntityCountDiagnosticsPlugin,
+        EntropyPlugin::<WyRand>::default(),
         animation::plugin,
         camera::plugin,
-        levels::plugin,
         grid::plugin,
+        levels::plugin,
+        loading::plugin,
+        sound::plugin,
         #[cfg(not(feature = "egui"))]
         terminal::plugin,
         #[cfg(feature = "egui")]
         egui::plugin,
     ))
-    .insert_resource(Flags { debug: false })
+    .init_state::<GameStates>()
+    .insert_resource(Flags {
+        debug: false,
+        sound: false,
+    })
     .insert_resource(ClearColor(Color::BLACK))
     .add_systems(Update, global_input_system);
 }
@@ -84,6 +96,9 @@ pub fn global_input_system(
             }
             KeyCode::Tab => {
                 flags.debug = !flags.debug;
+            }
+            KeyCode::KeyM => {
+                flags.sound = !flags.sound;
             }
             _ => {}
         }

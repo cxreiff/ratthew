@@ -40,12 +40,19 @@ pub fn debug_frame(
 
     let name_string = "ratthew";
     let name_line = Line::from(name_string).centered();
-    let name_block = undertab_block.clone();
 
-    let controls_string =
-        ["WASD to move", "Q/E to turn", "ESC to quit", "TAB to debug"].join("  |  ");
+    let settings_line =
+        Line::from(format!("sound: {}", if flags.sound { "ON" } else { "OFF" })).centered();
+
+    let controls_string = [
+        "WASD to move",
+        "Q/E to turn",
+        "M to toggle sound",
+        "ESC to quit",
+        "TAB to debug",
+    ]
+    .join("  |  ");
     let controls_line = Line::from(controls_string.clone()).centered();
-    let controls_block = undertab_block.clone();
 
     let bottom_area = Layout::new(
         Direction::Horizontal,
@@ -56,11 +63,12 @@ pub fn debug_frame(
         ],
     )
     .split(layout[1]);
-    frame.render_widget(name_line, name_block.inner(bottom_area[0]));
-    frame.render_widget(name_block, bottom_area[0]);
+    frame.render_widget(name_line, undertab_block.inner(bottom_area[0]));
+    frame.render_widget(undertab_block.clone(), bottom_area[0]);
+    frame.render_widget(settings_line, undertab_block.inner(bottom_area[1]));
     frame.render_widget(undertab_block.clone(), bottom_area[1]);
-    frame.render_widget(controls_line, controls_block.inner(bottom_area[2]));
-    frame.render_widget(controls_block, bottom_area[2]);
+    frame.render_widget(controls_line, undertab_block.inner(bottom_area[2]));
+    frame.render_widget(undertab_block.clone(), bottom_area[2]);
 
     if flags.debug {
         let debug_layout = Layout::new(

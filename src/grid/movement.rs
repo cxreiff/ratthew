@@ -12,7 +12,8 @@ use super::{
 };
 
 pub(super) fn plugin(app: &mut App) {
-    app.add_observer(grid_position_setup_observer)
+    app.add_event::<GridPositionMoveAttempt>()
+        .add_observer(grid_position_setup_observer)
         .add_observer(grid_direction_setup_observer)
         .add_systems(
             Update,

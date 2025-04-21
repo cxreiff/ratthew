@@ -1,12 +1,7 @@
 use std::ops::Deref;
 
-use bevy::{
-    asset::RenderAssetUsages, gltf::Gltf, prelude::*, render::view::RenderLayers, utils::HashMap,
-};
-use bevy_asset_loader::{
-    asset_collection::AssetCollection,
-    loading_state::{config::ConfigureLoadingState, LoadingState, LoadingStateAppExt},
-};
+use bevy::{asset::RenderAssetUsages, prelude::*, render::view::RenderLayers, utils::HashMap};
+use bevy_asset_loader::asset_collection::AssetCollection;
 use bevy_ecs_ldtk::{
     assets::{LdtkAssetPlugin, LdtkProject},
     ldtk::{TileInstance, TilesetRectangle},
@@ -30,12 +25,6 @@ use super::{
 
 pub(super) fn plugin(app: &mut App) {
     app.add_plugins(LdtkAssetPlugin)
-        .init_state::<GameStates>()
-        .add_loading_state(
-            LoadingState::new(GameStates::Loading)
-                .continue_to_state(GameStates::Playing)
-                .load_collection::<GameAssets>(),
-        )
         .add_systems(Startup, level_load_setup_system)
         .add_systems(OnEnter(GameStates::Playing), initial_load_system)
         .add_systems(
@@ -47,13 +36,11 @@ pub(super) fn plugin(app: &mut App) {
 }
 
 #[derive(AssetCollection, Resource)]
-pub struct GameAssets {
-    #[asset(path = "level.ldtk")]
+pub struct LevelAssets {
+    #[asset(key = "levels.level")]
     level: Handle<LdtkProject>,
-    #[asset(path = "sprites.png")]
-    tileset: Handle<Image>,
-    #[asset(path = "sword.glb")]
-    pub sword: Handle<Gltf>,
+    #[asset(key = "levels.spritesheet")]
+    spritesheet: Handle<Image>,
 }
 
 #[derive(Event, Debug, Clone)]
@@ -126,13 +113,13 @@ fn initial_load_system(mut commands: Commands) {
 
 fn level_load_system(
     mut commands: Commands,
-    handles: Res<GameAssets>,
+    handles: Res<LevelAssets>,
     mut ldtk_asset_events: EventReader<AssetEvent<LdtkProject>>,
     mut image_asset_events: EventReader<AssetEvent<Image>>,
 ) {
     for event in image_asset_events.read() {
         if let AssetEvent::Modified { id } = event {
-            if handles.tileset.id() == *id {
+            if handles.spritesheet.id() == *id {
                 commands.trigger(LdtkLevelLoad);
             }
         }
@@ -150,7 +137,7 @@ fn level_load_observer(
     mut commands: Commands,
     mut materials: ResMut<Assets<StandardMaterial>>,
     mut images: ResMut<Assets<Image>>,
-    handles: Res<GameAssets>,
+    handles: Res<LevelAssets>,
     spawned_from_ldtk: Query<Entity, With<SpawnedFromLdtk>>,
     ldtk_material_maps: Query<(Entity, &LdtkTilesetMaterials)>,
     ldtk_assets: Res<Assets<LdtkProject>>,
@@ -163,7 +150,7 @@ fn level_load_observer(
     missing_material: Res<MissingMaterial>,
     torch_material: Res<TorchMaterial>,
 ) {
-    let tileset = images.get(&handles.tileset).unwrap();
+    let tileset = images.get(&handles.spritesheet).unwrap();
     let mut tileset = tileset.clone().try_into_dynamic().unwrap();
 
     for entity in &spawned_from_ldtk {

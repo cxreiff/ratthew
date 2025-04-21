@@ -8,7 +8,7 @@ mod upright_billboard;
 mod upright_cube;
 mod upright_ramp;
 
-pub use loading::{Collides, GameAssets, RampBlock};
+pub use loading::{Collides, LevelAssets, RampBlock};
 
 pub(super) fn plugin(app: &mut App) {
     app.add_plugins((loading::plugin, torch_effect::plugin));

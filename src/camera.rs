@@ -1,6 +1,7 @@
 use bevy::{
     core_pipeline::Skybox, gltf::Gltf, prelude::*, render::view::RenderLayers, utils::HashMap,
 };
+use bevy_asset_loader::asset_collection::AssetCollection;
 use bevy_ratatui_camera::{
     LuminanceConfig, RatatuiCamera, RatatuiCameraEdgeDetection, RatatuiCameraStrategy,
 };
@@ -8,13 +9,18 @@ use bevy_ratatui_camera::{
 use crate::{
     animation::{GridAnimated, ItemBobTween},
     grid::{Direction, GridDirection, GridPosition},
-    levels::GameAssets,
     GameStates,
 };
 
 pub(crate) fn plugin(app: &mut App) {
     app.init_resource::<KeysDown>()
         .add_systems(OnEnter(GameStates::Playing), setup_camera_system);
+}
+
+#[derive(AssetCollection, Resource)]
+pub struct PlayerAssets {
+    #[asset(key = "player.sword")]
+    pub sword: Handle<Gltf>,
 }
 
 #[derive(Component)]
@@ -34,7 +40,7 @@ pub struct KeysDown(pub HashMap<KeyCode, f32>);
 
 fn setup_camera_system(
     mut commands: Commands,
-    handles: Res<GameAssets>,
+    handles: Res<PlayerAssets>,
     assets_gltf: Res<Assets<Gltf>>,
     asset_server: Res<AssetServer>,
 ) {

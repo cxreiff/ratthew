@@ -1,0 +1,39 @@
+({
+    "levels.level": File (
+        path: "level.ldtk",
+    ),
+    "levels.spritesheet": File (
+        path: "spritesheet.png",
+    ),
+    "sfx.grass": Files (
+        paths: [
+            "sfx/grass/grass1.wav",
+            "sfx/grass/grass2.wav",
+            "sfx/grass/grass3.wav",
+        ],
+    ),
+    "sfx.gravel": Files (
+        paths: [
+            "sfx/gravel/gravel1.wav",
+            "sfx/gravel/gravel2.wav",
+            "sfx/gravel/gravel3.wav",
+        ],
+    ),
+    "sfx.snow": Files (
+        paths: [
+            "sfx/snow/snow1.wav",
+            "sfx/snow/snow2.wav",
+            "sfx/snow/snow3.wav",
+        ],
+    ),
+    "sfx.wood": Files (
+        paths: [
+            "sfx/wood/wood1.wav",
+            "sfx/wood/wood2.wav",
+            "sfx/wood/wood3.wav",
+        ],
+    ),
+    "player.sword": File (
+        path: "sword.glb",
+    ),
+})
