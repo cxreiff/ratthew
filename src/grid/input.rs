@@ -1,6 +1,6 @@
 use bevy::prelude::*;
 
-use crate::camera::PlayerCamera;
+use crate::camera::{PersistClearEvent, PersistEvent, PlayerCamera};
 
 use super::{
     direction::GridDirection,
@@ -42,6 +42,12 @@ pub fn handle_grid_movement_input_system(
             }
             KeyCode::KeyE => {
                 entity.trigger(GridDirectionMove(grid_direction.right()));
+            }
+            KeyCode::KeyP => {
+                entity.trigger(PersistEvent);
+            }
+            KeyCode::KeyO => {
+                entity.trigger(PersistClearEvent);
             }
             _ => {}
         }

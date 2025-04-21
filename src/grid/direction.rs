@@ -1,8 +1,9 @@
 use std::f32::consts::PI;
 
 use bevy::prelude::*;
+use serde::{Deserialize, Serialize};
 
-#[derive(Component, Clone, Copy, Debug, Default, PartialEq, Eq)]
+#[derive(Component, Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
 pub enum Direction {
     #[default]
     North,
@@ -35,7 +36,9 @@ impl Direction {
     }
 }
 
-#[derive(Component, Clone, Copy, Debug, Default, PartialEq, Eq, Deref, DerefMut)]
+#[derive(
+    Component, Clone, Copy, Debug, Default, PartialEq, Eq, Deref, DerefMut, Serialize, Deserialize,
+)]
 pub struct GridDirection(pub Direction);
 
 impl From<GridDirection> for Quat {

@@ -10,13 +10,14 @@ use bevy::log::tracing_subscriber::layer::SubscriberExt;
 use bevy::log::tracing_subscriber::util::SubscriberInitExt;
 use bevy::prelude::*;
 use bevy::utils::error;
+use bevy_persistent::Persistent;
 use bevy_ratatui::kitty::KittyEnabled;
 use bevy_ratatui::terminal::RatatuiContext;
 use bevy_ratatui::RatatuiPlugins;
 use bevy_ratatui_camera::RatatuiCameraWidget;
 use crossterm::event::KeyEventKind;
 
-use crate::camera::{BackgroundCamera, PlayerCamera, WorldCamera};
+use crate::camera::{BackgroundCamera, PlayerCamera, PlayerPersist, WorldCamera};
 use crate::grid::{GridDirection, GridPosition};
 use crate::widgets::debug_frame::debug_frame;
 use crate::Flags;
@@ -54,6 +55,7 @@ fn draw_scene_system(
     flags: Res<Flags>,
     diagnostics: Res<DiagnosticsStore>,
     kitty_enabled: Option<Res<KittyEnabled>>,
+    persist: Res<Persistent<PlayerPersist>>,
 ) -> io::Result<()> {
     ratatui.draw(|frame| {
         let area = debug_frame(
@@ -62,6 +64,7 @@ fn draw_scene_system(
             &diagnostics,
             kitty_enabled.as_deref(),
             player.get_single().ok(),
+            &persist,
             true,
         );
 
@@ -122,6 +125,8 @@ pub fn temporary_terminal_forward_system(
             crossterm::event::KeyCode::Char('q') => send_key('q', KeyCode::KeyQ),
             crossterm::event::KeyCode::Char('e') => send_key('e', KeyCode::KeyE),
             crossterm::event::KeyCode::Char('m') => send_key('m', KeyCode::KeyM),
+            crossterm::event::KeyCode::Char('p') => send_key('p', KeyCode::KeyP),
+            crossterm::event::KeyCode::Char('o') => send_key('o', KeyCode::KeyO),
             crossterm::event::KeyCode::Tab => send_key('t', KeyCode::Tab),
             crossterm::event::KeyCode::Esc => send_key('x', KeyCode::Escape),
             _ => {}

@@ -10,6 +10,7 @@ use bevy_tween::DefaultTweenPlugins;
 
 mod animation;
 mod camera;
+mod config;
 mod grid;
 mod levels;
 mod loading;

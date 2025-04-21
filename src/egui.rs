@@ -2,6 +2,7 @@ use std::io;
 
 use bevy::{diagnostic::DiagnosticsStore, prelude::*};
 use bevy_egui::{EguiContexts, EguiPlugin};
+use bevy_persistent::Persistent;
 use bevy_ratatui::kitty::KittyEnabled;
 use bevy_ratatui_camera::RatatuiCameraWidget;
 use egui::{CentralPanel, Frame, Margin};
@@ -9,7 +10,7 @@ use egui_ratatui::RataguiBackend;
 use ratatui::Terminal;
 
 use crate::{
-    camera::{BackgroundCamera, PlayerCamera, WorldCamera},
+    camera::{BackgroundCamera, PlayerCamera, PlayerPersist, WorldCamera},
     grid::{GridDirection, GridPosition},
     widgets::debug_frame::debug_frame,
     Flags,
@@ -45,6 +46,7 @@ fn draw_scene_system(
     flags: Res<Flags>,
     diagnostics: Res<DiagnosticsStore>,
     kitty_enabled: Option<Res<KittyEnabled>>,
+    persist: Res<Persistent<PlayerPersist>>,
 ) -> io::Result<()> {
     ratagui.draw(|frame| {
         let area = debug_frame(
@@ -53,6 +55,7 @@ fn draw_scene_system(
             &diagnostics,
             kitty_enabled.as_deref(),
             player.get_single().ok(),
+            &persist,
             false,
         );
 

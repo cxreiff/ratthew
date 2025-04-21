@@ -1,6 +1,7 @@
 use bevy::diagnostic::{
     DiagnosticsStore, EntityCountDiagnosticsPlugin, FrameTimeDiagnosticsPlugin,
 };
+use bevy_persistent::Persistent;
 use bevy_ratatui::kitty::KittyEnabled;
 use ratatui::{
     layout::{Constraint, Direction, Layout},
@@ -12,6 +13,8 @@ use ratatui::{
 use tui_logger::TuiLoggerWidget;
 
 use crate::{
+    camera::PlayerPersist,
+    config::{PLAYER_STARTING_DIRECTION, PLAYER_STARTING_POSITION},
     grid::{GridDirection, GridPosition},
     Flags,
 };
@@ -22,6 +25,7 @@ pub fn debug_frame(
     diagnostics: &DiagnosticsStore,
     kitty_enabled: Option<&KittyEnabled>,
     player: Option<(&GridPosition, &GridDirection)>,
+    persist: &Persistent<PlayerPersist>,
     show_log_panel: bool,
 ) -> ratatui::layout::Rect {
     let main_block = Block::bordered()
@@ -41,8 +45,20 @@ pub fn debug_frame(
     let name_string = "ratthew";
     let name_line = Line::from(name_string).centered();
 
-    let settings_line =
-        Line::from(format!("sound: {}", if flags.sound { "ON" } else { "OFF" })).centered();
+    let mut settings_strings = vec![format!("sound: {}", if flags.sound { "ON" } else { "OFF" })];
+    if !persist.position.eq(&PLAYER_STARTING_POSITION)
+        || !persist.direction.0.eq(&PLAYER_STARTING_DIRECTION)
+    {
+        settings_strings.push(format!(
+            "persist: {}, {}, {}, {}",
+            persist.position.x,
+            persist.position.y,
+            persist.position.z,
+            format!("{:?}", persist.direction.0).to_lowercase()
+        ));
+    }
+    let settings_string = settings_strings.join("  |  ");
+    let settings_line = Line::from(settings_string).centered();
 
     let controls_string = [
         "WASD to move",
