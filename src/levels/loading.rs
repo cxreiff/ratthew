@@ -166,7 +166,7 @@ fn level_load_observer(
 
     if let Some(ldtk) = ldtk_assets.get(&handles.level) {
         for level in ldtk.as_standalone().iter_loaded_levels() {
-            let altitude = level.world_depth();
+            let offset = IVec3::new(*level.world_x(), *level.world_depth(), *level.world_y());
 
             for layer in level.layer_instances().iter() {
                 let Ok(layer_data) = LayerData::try_from(layer) else {
@@ -181,7 +181,7 @@ fn level_load_observer(
                             &particle_handle,
                             &torch_mesh,
                             &torch_material,
-                            *altitude,
+                            offset,
                             layer_data.sprite_size,
                             &instances,
                         );
@@ -192,9 +192,9 @@ fn level_load_observer(
                             &mut materials,
                             &mut images,
                             &mut tileset,
+                            offset,
                             &missing_material,
                             &upright_cube_mesh,
-                            *altitude,
                             layer_data.sprite_size,
                             &instances,
                             (WallBlock, Collides),
@@ -206,8 +206,8 @@ fn level_load_observer(
                             &mut materials,
                             &mut images,
                             &mut tileset,
+                            offset,
                             &missing_material,
-                            *altitude,
                             layer_data.sprite_size,
                             &instances,
                             ramp_mesh.0.clone(),
@@ -220,8 +220,8 @@ fn level_load_observer(
                             &mut materials,
                             &mut images,
                             &mut tileset,
+                            offset,
                             &missing_material,
-                            *altitude,
                             layer_data.sprite_size,
                             &instances,
                             flipped_ramp_mesh.0.clone(),
@@ -234,8 +234,8 @@ fn level_load_observer(
                             &mut materials,
                             &mut images,
                             &mut tileset,
+                            offset,
                             &missing_material,
-                            *altitude,
                             layer_data.sprite_size,
                             &instances,
                             &billboard_mesh,
@@ -248,8 +248,8 @@ fn level_load_observer(
                             &mut materials,
                             &mut images,
                             &mut tileset,
+                            offset,
                             &missing_material,
-                            *altitude,
                             layer_data.sprite_size,
                             &instances,
                             &billboard_mesh,
@@ -267,9 +267,9 @@ pub fn spawn_layer_walls<T>(
     materials: &mut ResMut<Assets<StandardMaterial>>,
     images: &mut ResMut<Assets<Image>>,
     tileset: &mut DynamicImage,
+    offset: IVec3,
     missing_material: &Handle<StandardMaterial>,
     cube_mesh: &Handle<Mesh>,
-    altitude: i32,
     sprite_size: IVec2,
     instances: &Vec<TileInstance>,
     markers: T,
@@ -283,9 +283,9 @@ pub fn spawn_layer_walls<T>(
             .spawn((
                 SpawnedFromLdtk,
                 GridPosition(IVec3::new(
-                    tile.px.x / sprite_size.y,
-                    altitude,
-                    tile.px.y / sprite_size.y,
+                    (tile.px.x + offset.x) / sprite_size.y,
+                    offset.y,
+                    (tile.px.y + offset.z) / sprite_size.y,
                 )),
                 Mesh3d(cube_mesh.clone()),
                 MeshMaterial3d(
@@ -307,7 +307,7 @@ fn spawn_layer_torches(
     particle_handle: &Res<TorchEffect>,
     torch_mesh: &Handle<Mesh>,
     torch_material: &Handle<StandardMaterial>,
-    altitude: i32,
+    offset: IVec3,
     sprite_size: IVec2,
     instances: &[EntityInstance],
 ) {
@@ -316,9 +316,9 @@ fn spawn_layer_torches(
             .spawn((
                 SpawnedFromLdtk,
                 GridPosition(IVec3::new(
-                    entity.px.x / sprite_size.y,
-                    altitude,
-                    entity.px.y / sprite_size.y,
+                    (entity.px.x + offset.x) / sprite_size.y,
+                    offset.y,
+                    (entity.px.y + offset.z) / sprite_size.y,
                 )),
                 ParticleEffectBundle {
                     effect: ParticleEffect::new(particle_handle.0.clone()),
@@ -340,8 +340,8 @@ fn spawn_layer_ramps<T>(
     materials: &mut ResMut<Assets<StandardMaterial>>,
     images: &mut ResMut<Assets<Image>>,
     tileset: &mut DynamicImage,
+    offset: IVec3,
     missing_material: &Handle<StandardMaterial>,
-    altitude: i32,
     sprite_size: IVec2,
     instances: &[EntityInstance],
     ramp_mesh: Handle<Mesh>,
@@ -368,9 +368,9 @@ fn spawn_layer_ramps<T>(
             .spawn((
                 SpawnedFromLdtk,
                 GridPosition(IVec3::new(
-                    entity.px.x / sprite_size.y,
-                    altitude,
-                    entity.px.y / sprite_size.y,
+                    (entity.px.x + offset.x) / sprite_size.y,
+                    offset.y,
+                    (entity.px.y + offset.z) / sprite_size.y,
                 )),
                 GridDirection(direction),
                 Mesh3d(ramp_mesh.clone()),
@@ -392,8 +392,8 @@ fn spawn_billboard<T>(
     materials: &mut ResMut<Assets<StandardMaterial>>,
     images: &mut ResMut<Assets<Image>>,
     tileset: &mut DynamicImage,
+    offset: IVec3,
     missing_material: &Handle<StandardMaterial>,
-    altitude: i32,
     sprite_size: IVec2,
     instances: &[EntityInstance],
     billboard_mesh: &BillboardMesh,
@@ -408,6 +408,17 @@ fn spawn_billboard<T>(
             continue;
         };
 
+        let direction = entity
+            .get_enum_field("direction")
+            .map(|dir| match dir.as_str() {
+                "north" => Direction::North,
+                "east" => Direction::East,
+                "south" => Direction::South,
+                "west" => Direction::West,
+                _ => unreachable!(),
+            })
+            .unwrap_or(Direction::North);
+
         let tile_material = material_map
             .get(&(tile.x, tile.y))
             .unwrap_or(missing_material)
@@ -417,16 +428,16 @@ fn spawn_billboard<T>(
             .spawn((
                 SpawnedFromLdtk,
                 GridPosition(IVec3::new(
-                    entity.px.x / sprite_size.y,
-                    altitude,
-                    entity.px.y / sprite_size.y,
+                    (entity.px.x + offset.x) / sprite_size.y,
+                    offset.y,
+                    (entity.px.y + offset.z) / sprite_size.y,
                 )),
                 GridDirection::default(),
                 Mesh3d(billboard_mesh.0.clone()),
                 MeshMaterial3d(tile_material),
                 RenderLayers::layer(1),
             ))
-            .insert(markers.clone());
+            .insert((markers.clone(), GridDirection(direction)));
     }
 }
 
