@@ -12,6 +12,8 @@ use crate::{
     GameStates,
 };
 
+use super::column::ColumnBlock;
+
 pub(super) fn plugin(app: &mut App) {
     app.add_plugins(LdtkAssetPlugin)
         .add_systems(OnEnter(GameStates::Playing), initial_load_system)
@@ -72,12 +74,14 @@ fn level_load_observer(
             Option<&BlockMeshMap<RampBlock>>,
             Option<&BlockMeshMap<RampFlippedBlock>>,
             Option<&BlockMeshMap<BillboardBlock>>,
+            Option<&BlockMeshMap<ColumnBlock>>,
         ),
         Or<(
             With<BlockMeshMap<WallBlock>>,
             With<BlockMeshMap<RampBlock>>,
             With<BlockMeshMap<RampFlippedBlock>>,
             With<BlockMeshMap<BillboardBlock>>,
+            With<BlockMeshMap<ColumnBlock>>,
         )>,
     >,
     spawned_from_ldtk: Query<Entity, With<BlockSpawnedFromLdtk>>,
@@ -90,7 +94,7 @@ fn level_load_observer(
         commands.entity(entity).despawn_recursive();
     }
 
-    for (entity, w, r, rf, b) in &mesh_maps {
+    for (entity, w, r, rf, b, c) in &mesh_maps {
         if let Some(w) = w {
             for mesh in w.values() {
                 meshes.remove(mesh.deref());
@@ -118,6 +122,13 @@ fn level_load_observer(
             }
             commands.entity(entity).despawn_recursive();
         };
+
+        if let Some(c) = c {
+            for mesh in c.values() {
+                meshes.remove(mesh.deref());
+            }
+            commands.entity(entity).despawn_recursive();
+        };
     }
 
     // TODO: Should only be added once, in a setup system.
@@ -126,6 +137,7 @@ fn level_load_observer(
         alpha_mode: AlphaMode::AlphaToCoverage,
         perceptual_roughness: 1.0,
         reflectance: 0.,
+        double_sided: true,
         ..default()
     });
 
@@ -163,6 +175,12 @@ fn level_load_observer(
                         &material,
                     ),
                     "torches" => BlockLayer::<TorchBlock>::build(level, layer).spawn(
+                        commands.reborrow(),
+                        &mut meshes,
+                        &tileset,
+                        &material,
+                    ),
+                    "columns" => BlockLayer::<ColumnBlock>::build(level, layer).spawn(
                         commands.reborrow(),
                         &mut meshes,
                         &tileset,

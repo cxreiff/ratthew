@@ -44,9 +44,12 @@ fn torch_setup_system(
     mut materials: ResMut<Assets<StandardMaterial>>,
 ) {
     commands.insert_resource(TorchMesh(meshes.add(Cylinder::new(0.03, 0.4))));
-    commands.insert_resource(TorchMaterial(
-        materials.add(StandardMaterial::from(Color::srgb(0.6, 0.4, 0.3))),
-    ));
+    commands.insert_resource(TorchMaterial(materials.add(StandardMaterial {
+        base_color: Color::srgb(0.6, 0.4, 0.3),
+        perceptual_roughness: 1.0,
+        reflectance: 0.0,
+        ..default()
+    })));
 }
 
 fn torch_setup_observer(

@@ -5,6 +5,7 @@ mod blank_mesh;
 mod block_instances;
 mod block_layer;
 mod block_traits;
+mod column;
 mod ldtk_loading;
 mod ramp;
 mod ramp_flipped;

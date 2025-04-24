@@ -34,15 +34,15 @@ pub trait BlockMesh: Debug + Clone {
     fn generate_mesh(sprite_xy: IVec2, sprite_size: IVec2, tileset_size: IVec2) -> Mesh {
         let uv_tile_width = sprite_size.x as f32 / tileset_size.x as f32;
         let uv_tile_height = sprite_size.y as f32 / tileset_size.y as f32;
-        let x_zero = sprite_xy.x as f32 * uv_tile_width + 0.0001;
-        let y_zero = sprite_xy.y as f32 * uv_tile_height + 0.0001;
+        let x_zero = sprite_xy.x as f32 * uv_tile_width + 0.004;
+        let y_zero = sprite_xy.y as f32 * uv_tile_height + 0.004;
 
         let uvs = Self::uvs()
             .iter()
             .map(|[x, y]| {
                 [
-                    x_zero + (uv_tile_width - 0.0002) * x,
-                    y_zero + (uv_tile_height - 0.0002) * y,
+                    x_zero + (uv_tile_width - 0.008) * x,
+                    y_zero + (uv_tile_height - 0.008) * y,
                 ]
             })
             .collect::<Vec<_>>();
