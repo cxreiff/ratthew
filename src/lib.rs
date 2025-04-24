@@ -9,10 +9,10 @@ use bevy_ratatui_camera::RatatuiCameraPlugin;
 use bevy_tween::DefaultTweenPlugins;
 
 mod animation;
+mod blocks;
 mod camera;
 mod config;
 mod grid;
-mod levels;
 mod loading;
 mod sound;
 mod widgets;
@@ -66,9 +66,9 @@ pub fn plugin(app: &mut App) {
         EntityCountDiagnosticsPlugin,
         EntropyPlugin::<WyRand>::default(),
         animation::plugin,
+        blocks::plugin,
         camera::plugin,
         grid::plugin,
-        levels::plugin,
         loading::plugin,
         sound::plugin,
         #[cfg(not(feature = "egui"))]

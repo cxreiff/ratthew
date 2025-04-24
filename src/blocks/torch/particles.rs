@@ -7,7 +7,7 @@ pub(super) fn plugin(app: &mut App) {
 }
 
 #[derive(Resource)]
-pub struct TorchEffect(pub Handle<EffectAsset>);
+pub struct TorchParticleEffect(pub Handle<EffectAsset>);
 
 fn torch_setup(mut commands: Commands, mut effects: ResMut<Assets<EffectAsset>>) {
     let mut gradient = Gradient::new();
@@ -53,5 +53,5 @@ fn torch_setup(mut commands: Commands, mut effects: ResMut<Assets<EffectAsset>>)
 
     let effect_handle = effects.add(effect);
 
-    commands.insert_resource(TorchEffect(effect_handle));
+    commands.insert_resource(TorchParticleEffect(effect_handle));
 }

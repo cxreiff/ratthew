@@ -2,7 +2,7 @@ use bevy::prelude::*;
 
 use crate::{
     animation::{GridAnimated, GridMoveBlockedTween, GridMoveTween},
-    levels::RampBlock,
+    blocks::RampBlockMarker,
 };
 
 use super::{
@@ -78,7 +78,7 @@ fn grid_animated_movement_system(
 
 fn ramp_height_correction_system(
     mut positioned: Query<(&mut Transform, &GridAnimated)>,
-    ramps: Query<(&GridPosition, &GridDirection), With<RampBlock>>,
+    ramps: Query<(&GridPosition, &GridDirection), With<RampBlockMarker>>,
 ) {
     for (mut transform, animated) in &mut positioned {
         let current_position = GridPosition::from(animated.buffer_transform);

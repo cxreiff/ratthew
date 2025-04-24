@@ -1,9 +1,6 @@
 use bevy::prelude::*;
 
-use crate::{
-    animation::GridAnimated,
-    levels::{Collides, RampBlock},
-};
+use crate::{animation::GridAnimated, blocks::RampBlockMarker};
 
 use super::{
     animation::GridMoveBlocked,
@@ -34,6 +31,9 @@ pub struct GridPositionMove(pub GridPosition);
 #[derive(Event, Default, Debug, Clone)]
 pub struct GridDirectionMove(pub GridDirection);
 
+#[derive(Component, Debug, Clone)]
+pub struct GridCollides;
+
 fn grid_position_setup_observer(
     trigger: Trigger<OnAdd, GridPosition>,
     mut commands: Commands,
@@ -61,8 +61,8 @@ fn grid_movement_attempt_observer(
     trigger: Trigger<GridPositionMoveAttempt>,
     mut commands: Commands,
     grid_positions: Query<&GridPosition>,
-    colliders: Query<&GridPosition, With<Collides>>,
-    ramps: Query<(&GridPosition, &GridDirection), With<RampBlock>>,
+    colliders: Query<&GridPosition, With<GridCollides>>,
+    ramps: Query<(&GridPosition, &GridDirection), With<RampBlockMarker>>,
 ) {
     if let Ok(mover_position) = grid_positions.get(trigger.entity()) {
         let mut entity = commands.entity(trigger.entity());

@@ -1,11 +1,12 @@
-use crate::levels::{Collides, RampBlock};
 use bevy::prelude::*;
 
-use super::{GridDirection, GridPosition};
+use crate::blocks::RampBlockMarker;
+
+use super::{movement::GridCollides, GridDirection, GridPosition};
 
 pub fn find_collider_position<'a>(
     position: &GridPosition,
-    colliders: &'a Query<&GridPosition, With<Collides>>,
+    colliders: &'a Query<&GridPosition, With<GridCollides>>,
 ) -> Option<&'a GridPosition> {
     colliders
         .iter()
@@ -14,7 +15,7 @@ pub fn find_collider_position<'a>(
 
 pub fn find_ramp_position_direction<'a>(
     position: &GridPosition,
-    ramps: &'a Query<(&GridPosition, &GridDirection), With<RampBlock>>,
+    ramps: &'a Query<(&GridPosition, &GridDirection), With<RampBlockMarker>>,
 ) -> Option<(&'a GridPosition, &'a GridDirection)> {
     ramps
         .iter()

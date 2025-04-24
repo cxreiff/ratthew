@@ -89,6 +89,10 @@ fn setup_camera_system(
                 ..default()
             },
             Camera3d::default(),
+            Projection::from(PerspectiveProjection {
+                fov: 70.0_f32.to_radians(),
+                ..default()
+            }),
             RatatuiCamera::default(),
             RatatuiCameraStrategy::Luminance(LuminanceConfig {
                 luminance_characters: LuminanceConfig::LUMINANCE_CHARACTERS_MISC.into(),
@@ -103,11 +107,25 @@ fn setup_camera_system(
             parent.spawn((
                 RenderLayers::layer(0),
                 PointLight {
-                    intensity: 15000.,
+                    intensity: 13000.,
                     shadows_enabled: true,
                     ..default()
                 },
             ));
+            if let Some(gltf) = assets_gltf.get(&handles.sword) {
+                let mut sword_transform = Transform::default().with_scale(Vec3::new(0.4, 0.4, 0.4));
+                sword_transform.rotate_local_x(-1.5);
+                sword_transform.rotate_local_y(0.3);
+                sword_transform.rotate_local_z(-0.16);
+
+                parent.spawn((
+                    RenderLayers::layer(0), // setting this does not set gltf children
+                    SceneRoot(gltf.scenes[0].clone()),
+                    ItemBobTween,
+                    sword_transform,
+                    Sword,
+                ));
+            }
 
             parent.spawn((
                 WorldCamera,
@@ -134,24 +152,11 @@ fn setup_camera_system(
                     ..default()
                 },
             ));
-            if let Some(gltf) = assets_gltf.get(&handles.sword) {
-                let mut sword_transform = Transform::default().with_scale(Vec3::new(0.4, 0.4, 0.4));
-                sword_transform.rotate_local_x(-1.5);
-                sword_transform.rotate_local_y(0.3);
-                sword_transform.rotate_local_z(-0.16);
 
-                parent.spawn((
-                    RenderLayers::layer(0), // setting this does not set gltf children
-                    SceneRoot(gltf.scenes[0].clone()),
-                    ItemBobTween,
-                    sword_transform,
-                    Sword,
-                ));
-            }
             parent.spawn((
                 RenderLayers::layer(1),
                 PointLight {
-                    intensity: 70000.,
+                    intensity: 40000.,
                     shadows_enabled: true,
                     ..default()
                 },
@@ -161,10 +166,6 @@ fn setup_camera_system(
                 BackgroundCamera,
                 RenderLayers::layer(2),
                 Camera3d::default(),
-                Camera {
-                    order: 0,
-                    ..default()
-                },
                 Projection::from(PerspectiveProjection {
                     fov: 70.0_f32.to_radians(),
                     ..default()

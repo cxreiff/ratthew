@@ -4,6 +4,7 @@ use serde::{Deserialize, Serialize};
 use super::direction::{Direction, GridDirection};
 
 #[derive(Component, Deref, DerefMut, Serialize, Deserialize, Clone, Copy, Debug, Default)]
+#[require(Transform)]
 pub struct GridPosition(pub IVec3);
 
 impl GridPosition {

@@ -9,7 +9,7 @@ mod utilities;
 
 use bevy_tween::TweenSystemSet;
 pub use direction::{Direction, GridDirection};
-pub use movement::{GridDirectionMove, GridPositionMoveAttempt};
+pub use movement::{GridCollides, GridDirectionMove, GridPositionMoveAttempt};
 pub use position::GridPosition;
 
 use crate::GameStates;

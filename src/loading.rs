@@ -4,7 +4,7 @@ use bevy_asset_loader::{
     standard_dynamic_asset::StandardDynamicAssetCollection,
 };
 
-use crate::{camera::PlayerAssets, levels::LevelAssets, sound::SfxAssets, GameStates};
+use crate::{blocks::LevelAssets, camera::PlayerAssets, sound::SfxAssets, GameStates};
 
 pub(super) fn plugin(app: &mut App) {
     app.add_loading_state(

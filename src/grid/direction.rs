@@ -1,6 +1,7 @@
 use std::f32::consts::PI;
 
 use bevy::prelude::*;
+use bevy_ecs_ldtk::{prelude::LdtkFields, EntityInstance};
 use serde::{Deserialize, Serialize};
 
 #[derive(Component, Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
@@ -33,6 +34,21 @@ impl Direction {
 
     pub fn reverse(&self) -> Self {
         self.right().right()
+    }
+}
+
+impl From<&EntityInstance> for Direction {
+    fn from(value: &EntityInstance) -> Self {
+        value
+            .get_enum_field("direction")
+            .map(|dir| match dir.as_str() {
+                "north" => Direction::North,
+                "east" => Direction::East,
+                "south" => Direction::South,
+                "west" => Direction::West,
+                _ => unreachable!(),
+            })
+            .unwrap_or(Direction::North)
     }
 }
 
