@@ -41,8 +41,8 @@ pub trait BlockMesh: Debug + Clone {
             .iter()
             .map(|[x, y]| {
                 [
-                    x_zero + (uv_tile_width - 0.002) * x,
-                    y_zero + (uv_tile_height - 0.002) * y,
+                    x_zero + (uv_tile_width - 0.0002) * x,
+                    y_zero + (uv_tile_height - 0.0002) * y,
                 ]
             })
             .collect::<Vec<_>>();

@@ -113,7 +113,7 @@ fn setup_camera_system(
                 },
             ));
             if let Some(gltf) = assets_gltf.get(&handles.sword) {
-                let mut sword_transform = Transform::default().with_scale(Vec3::new(0.4, 0.4, 0.4));
+                let mut sword_transform = Transform::default().with_scale(Vec3::new(0.4, 0.2, 0.4));
                 sword_transform.rotate_local_x(-1.5);
                 sword_transform.rotate_local_y(0.3);
                 sword_transform.rotate_local_z(-0.16);

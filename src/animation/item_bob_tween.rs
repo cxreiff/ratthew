@@ -29,8 +29,8 @@ impl AutoTween for ItemBobTween {
                 Duration::from_millis(2000),
                 EaseKind::SineInOut,
                 target.with(translation(
-                    Vec3::new(0.3, -0.15, -0.7),
-                    Vec3::new(0.3, -0.14, -0.7),
+                    Vec3::new(0.25, -0.16, -0.4),
+                    Vec3::new(0.25, -0.18, -0.4),
                 )),
             );
     }
